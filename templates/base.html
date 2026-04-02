@@ -1,0 +1,411 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - flexapi-captcha</title>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --bg-soft: #eef4ff;
+            --sidebar: #ffffff;
+            --sidebar-text: #4b5563;
+            --sidebar-active: #409eff;
+            --card: rgba(255, 255, 255, 0.96);
+            --card-strong: #ffffff;
+            --text: #303133;
+            --muted: #606266;
+            --border: #e4e7ed;
+            --primary: #409eff;
+            --primary-soft: rgba(64, 158, 255, 0.12);
+            --success: #67c23a;
+            --warning: #e6a23c;
+            --danger: #f56c6c;
+            --shadow: 0 8px 24px rgba(31, 45, 61, 0.06);
+        }
+        html[data-theme='dark'] {
+            --bg: #14181f;
+            --bg-soft: #11161d;
+            --sidebar: #161b22;
+            --sidebar-text: #c0c4cc;
+            --sidebar-active: #5aa8ff;
+            --card: rgba(31, 35, 41, 0.95);
+            --card-strong: #1f2329;
+            --text: #e5eaf3;
+            --muted: #a3abb8;
+            --border: #3a3f45;
+            --primary: #5aa8ff;
+            --primary-soft: rgba(90, 168, 255, 0.16);
+            --success: #7ad84d;
+            --warning: #ffba53;
+            --danger: #ff7b7b;
+            --shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+        }
+        html[data-theme='violet'] {
+            --bg: #f7f3ff;
+            --bg-soft: #f1eaff;
+            --sidebar: #ffffff;
+            --sidebar-text: #5b5f72;
+            --sidebar-active: #9b7bff;
+            --card: rgba(255, 255, 255, 0.94);
+            --card-strong: #ffffff;
+            --text: #332f4a;
+            --muted: #726c91;
+            --border: #e7defa;
+            --primary: #7c5cff;
+            --primary-soft: rgba(124, 92, 255, 0.12);
+            --success: #39b980;
+            --warning: #f1a73d;
+            --danger: #ef5b7d;
+            --shadow: 0 12px 30px rgba(89, 75, 183, 0.12);
+        }
+        html[data-theme='emerald'] {
+            --bg: #f2fbf7;
+            --bg-soft: #eaf8f1;
+            --sidebar: #ffffff;
+            --sidebar-text: #4f6b64;
+            --sidebar-active: #3ed6b5;
+            --card: rgba(255, 255, 255, 0.94);
+            --card-strong: #ffffff;
+            --text: #25413b;
+            --muted: #5e7d76;
+            --border: #d8eee7;
+            --primary: #19b78b;
+            --primary-soft: rgba(25, 183, 139, 0.12);
+            --success: #27c06d;
+            --warning: #f0a53a;
+            --danger: #eb5e6b;
+            --shadow: 0 12px 30px rgba(23, 76, 69, 0.12);
+        }
+        html[data-theme='sunset'] {
+            --bg: #fff7f2;
+            --bg-soft: #fff1e8;
+            --sidebar: #ffffff;
+            --sidebar-text: #7b655f;
+            --sidebar-active: #ff9b6a;
+            --card: rgba(255, 255, 255, 0.94);
+            --card-strong: #ffffff;
+            --text: #4f3834;
+            --muted: #8a6660;
+            --border: #f5ddd4;
+            --primary: #f47b4f;
+            --primary-soft: rgba(244, 123, 79, 0.12);
+            --success: #57b96b;
+            --warning: #eea53b;
+            --danger: #e05555;
+            --shadow: 0 12px 30px rgba(177, 77, 77, 0.12);
+        }
+        html[data-theme='ocean'] {
+            --bg: #f0f9ff;
+            --bg-soft: #e8f5ff;
+            --sidebar: #ffffff;
+            --sidebar-text: #5c7280;
+            --sidebar-active: #47c0ff;
+            --card: rgba(255, 255, 255, 0.94);
+            --card-strong: #ffffff;
+            --text: #254253;
+            --muted: #5b7889;
+            --border: #d8ebf7;
+            --primary: #2898d8;
+            --primary-soft: rgba(40, 152, 216, 0.12);
+            --success: #35bf7b;
+            --warning: #efad3f;
+            --danger: #eb6464;
+            --shadow: 0 12px 30px rgba(20, 63, 92, 0.12);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        a { color: inherit; text-decoration: none; }
+        .layout { min-height: 100vh; }
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 220px;
+            overflow-y: auto;
+            background: var(--sidebar);
+            color: var(--sidebar-text);
+            padding: 18px 0;
+            border-right: 1px solid var(--border);
+        }
+        .brand { display:block; padding: 0 20px 18px; font-size: 18px; font-weight: 700; color: var(--text); border-bottom: 1px solid var(--border); }
+        .nav { padding: 14px 0; }
+        .nav a { display: block; padding: 12px 20px; font-size: 14px; transition: .2s ease; }
+        .nav a.active, .nav a:hover { background: var(--primary-soft); color: var(--primary); border-left: 3px solid var(--sidebar-active); padding-left: 17px; }
+        .content { margin-left: 220px; padding: 20px; min-height: 100vh; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; }
+        .title { margin: 0; font-size: 24px; font-weight: 700; }
+        .subtitle { margin-top: 6px; font-size: 13px; color: var(--muted); }
+        .panel, .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+        .panel { padding: 18px; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .small { font-size: 13px; color: var(--muted); }
+        .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; }
+        .card { padding: 18px; }
+        .metric { grid-column: span 2; min-height: 126px; }
+        .metric h3 { margin: 0 0 10px; font-size: 13px; color: var(--muted); font-weight: 600; }
+        .metric .value { font-size: 28px; font-weight: 700; }
+        .metric .metric-accent { width: 32px; height: 4px; border-radius: 4px; background: var(--primary); margin-bottom: 12px; }
+        .table-card { grid-column: span 12; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid var(--border); text-align: left; font-size: 13px; vertical-align: top; }
+        th { color: var(--muted); font-weight: 700; background: rgba(0,0,0,.02); }
+        html[data-theme='dark'] th { background: rgba(255,255,255,.03); }
+        .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; font-size: 12px; border: 1px solid var(--border); border-radius: 6px; }
+        .tag.success { color: var(--success); border-color: rgba(103,194,58,.35); background: rgba(103,194,58,.1); }
+        .tag.warning { color: var(--warning); border-color: rgba(230,162,60,.35); background: rgba(230,162,60,.1); }
+        .tag.danger { color: var(--danger); border-color: rgba(245,108,108,.35); background: rgba(245,108,108,.1); }
+        .tag.primary { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 35%, transparent); background: var(--primary-soft); }
+        input, select, textarea, button {
+            font: inherit;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            background: var(--card-strong);
+            color: var(--text);
+            border-radius: 8px;
+            transition: .2s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+        }
+        textarea { width: 100%; min-height: 140px; resize: vertical; }
+        button { cursor: pointer; }
+        .btn { display: inline-block; padding: 7px 12px; font-size: 12px; border: 1px solid var(--border); background: var(--card-strong); color: var(--text); border-radius: 6px; }
+        .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .btn-success { background: var(--success); border-color: var(--success); color: #fff; }
+        .btn-warning { background: var(--warning); border-color: var(--warning); color: #fff; }
+        .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+        .btn-link { color: var(--primary); background: transparent; border: none; padding: 0; }
+        .action-bar { display: flex; flex-wrap: wrap; gap: 6px; }
+        .table-actions { flex-wrap: nowrap; align-items: center; }
+        .table-actions form { margin: 0; }
+        .table-actions .btn { white-space: nowrap; }
+        .actions-cell { min-width: 300px; }
+        .inline-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .inline-form > * { flex: 1 1 140px; }
+        .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .panel-title { margin: 0 0 14px; font-size: 16px; font-weight: 700; }
+        .log-line { font-family: Consolas, monospace; font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+        .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px rgba(103,194,58,.16); }
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .42);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 2000;
+        }
+        .modal {
+            width: min(920px, 100%);
+            max-height: calc(100vh - 48px);
+            overflow: auto;
+            background: var(--card-strong);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, .22);
+        }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+        .modal-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            font-size: 18px;
+            line-height: 1;
+        }
+        .modal-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .modal-form .full { grid-column: 1 / -1; }
+        .toolbar-right { display: flex; gap: 10px; align-items: center; }
+        .icon-btn { width: 34px; height: 34px; padding: 0; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--border); background: var(--card-strong); border-radius: 8px; color: var(--muted); }
+        .icon-btn:hover { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 30%, var(--border)); background: var(--primary-soft); }
+        .toast-stack { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 12px; }
+        .toast {
+            min-width: 320px;
+            max-width: 420px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            background: color-mix(in srgb, var(--card-strong) 96%, transparent);
+            border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+            box-shadow: 0 16px 36px rgba(15, 23, 42, .14);
+            animation: toastIn .28s cubic-bezier(.21,1.02,.73,1) forwards;
+            backdrop-filter: blur(14px);
+            overflow: hidden;
+            position: relative;
+        }
+        .toast::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--primary); }
+        .toast.success .toast-icon { color: var(--success); background: rgba(103,194,58,.12); }
+        .toast.success::before { background: var(--success); }
+        .toast.warning .toast-icon { color: var(--warning); background: rgba(230,162,60,.12); }
+        .toast.warning::before { background: var(--warning); }
+        .toast.error .toast-icon { color: var(--danger); background: rgba(245,108,108,.12); }
+        .toast.error::before { background: var(--danger); }
+        .toast.info .toast-icon { color: var(--primary); background: rgba(64,158,255,.12); }
+        .toast.info::before { background: var(--primary); }
+        .toast-icon { width: 28px; height: 28px; display:flex; align-items:center; justify-content:center; border-radius: 50%; font-size: 14px; line-height: 1; flex: 0 0 28px; }
+        .toast-title { font-weight: 700; margin-bottom: 4px; }
+        .toast-body { flex: 1; min-width: 0; }
+        .toast-close { margin-left: auto; background: transparent; border: none; color: var(--muted); padding: 0; font-size: 18px; opacity: .7; }
+        .toast-close:hover { opacity: 1; transform: rotate(90deg); }
+        .empty-tip { padding: 26px 12px; text-align: center; color: var(--muted); }
+        @keyframes toastIn { from { transform: translate3d(0,-16px,0) scale(.96); opacity: 0; } to { transform: translate3d(0,0,0) scale(1); opacity: 1; } }
+        @keyframes toastOut { from { transform: translate3d(0,0,0) scale(1); opacity: 1; } to { transform: translate3d(0,-10px,0) scale(.96); opacity: 0; } }
+        @media (max-width: 1280px) { .metric { grid-column: span 3; } }
+        @media (max-width: 1100px) { .metric { grid-column: span 4; } .split, .modal-form { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) { .sidebar { position: static; width: auto; } .content { margin-left: 0; } }
+        @media (max-width: 680px) { .metric { grid-column: span 12; } .toolbar, .topbar { flex-direction: column; align-items: flex-start; } .toast-stack { left: 12px; right: 12px; top: 12px; } .toast { min-width: 0; max-width: none; width: 100%; } .modal-mask { padding: 12px; } }
+    </style>
+</head>
+<body>
+    <div class="toast-stack" id="toastStack"></div>
+    <div class="layout">
+        {% if admin_session.logged_in or user_session.logged_in %}
+        <aside class="sidebar">
+            <a class="brand" href="/">flexapi-captcha</a>
+            <nav class="nav">
+                {% if user_session.logged_in %}
+                <a href="/user/center?section=overview" class="{% if active_nav == 'user_overview' %}active{% endif %}">概览</a>
+                <a href="/user/center?section=keys" class="{% if active_nav == 'user_keys' %}active{% endif %}">API Key</a>
+                <a href="/user/center?section=security" class="{% if active_nav == 'user_security' %}active{% endif %}">安全设置</a>
+                <a href="/user/center?section=logs" class="{% if active_nav == 'user_logs' %}active{% endif %}">调用日志</a>
+                <a href="/user/center?section=billing" class="{% if active_nav == 'user_billing' %}active{% endif %}">账单与充值</a>
+                {% endif %}
+                {% if admin_session.logged_in %}<a href="/admin" class="{% if active_nav == 'dashboard' %}active{% endif %}">运维面板</a>{% endif %}
+                {% if admin_session.logged_in %}<a href="/admin/accounts" class="{% if active_nav == 'accounts' %}active{% endif %}">用户管理</a>{% endif %}
+                {% if admin_session.logged_in %}<a href="/admin/proxies" class="{% if active_nav == 'proxies' %}active{% endif %}">代理池管理</a>{% endif %}
+                <a href="/docs" class="{% if active_nav == 'docs' %}active{% endif %}">接口文档</a>
+            </nav>
+        </aside>
+        {% endif %}
+        <main class="content" {% if not admin_session.logged_in and not user_session.logged_in %}style="margin-left:0;"{% endif %}>
+            <div class="topbar">
+                <div>
+                    <h1 class="title">{{ title }}</h1>
+                    <div class="subtitle">{% if active_nav in ['user_overview', 'user_keys', 'user_security', 'user_logs', 'user_billing'] %}统一账户中心{% elif admin_session.logged_in %}后台控制台{% elif user_session.logged_in %}统一账户中心{% else %}服务门户{% endif %}</div>
+                </div>
+                {% if admin_session.logged_in %}
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span>服务运行中 · Uptime <span id="uptime" data-uptime-seconds="{{ runtime.uptime_seconds }}">{{ runtime.uptime_human }}</span></span>
+                </div>
+                {% else %}
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span>开放访问 · 公共文档与账户中心</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="toolbar">
+                <div class="small">
+                    {% if admin_session.logged_in %}
+                        当前管理员：{{ admin_session.username }} / {{ admin_session.role }}
+                    {% elif user_session.logged_in %}
+                        当前账号：{{ user_session.username }}{% if user_session.kind == 'admin' %} / 管理员{% else %} / 用户{% endif %}
+                    {% endif %}
+                </div>
+                <div class="toolbar-right">
+                    <button type="button" id="themeToggle" class="icon-btn" title="切换主题" aria-label="切换主题">◐</button>
+                    {% if admin_session.logged_in %}<form method="post" action="/admin/logout"><button type="submit" class="btn">退出登录</button></form>{% endif %}
+                    {% if user_session.logged_in and not admin_session.logged_in %}<form method="post" action="/user/logout"><button type="submit" class="btn">退出登录</button></form>{% endif %}
+                </div>
+            </div>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    <script>
+        (function(){
+            const root = document.documentElement;
+            const themeToggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('portal-theme') || 'light';
+            const toastStack = document.getElementById('toastStack');
+            const themes = ['light', 'dark', 'violet', 'emerald', 'sunset', 'ocean'];
+
+            function setTheme(theme) {
+                root.setAttribute('data-theme', theme);
+                localStorage.setItem('portal-theme', theme);
+            }
+
+            function showToast(message, type = 'info', title = '提示') {
+                if (!message || !toastStack) return;
+                const toast = document.createElement('div');
+                const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '!' : 'i';
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <div class="toast-icon">${icon}</div>
+                    <div class="toast-body">
+                        <div class="toast-title">${title}</div>
+                        <div>${message}</div>
+                    </div>
+                    <button type="button" class="toast-close" aria-label="关闭">×</button>
+                `;
+                const removeToast = () => {
+                    toast.style.animation = 'toastOut .22s ease forwards';
+                    setTimeout(() => toast.remove(), 220);
+                };
+                toast.querySelector('.toast-close')?.addEventListener('click', removeToast);
+                toastStack.appendChild(toast);
+                setTimeout(removeToast, 3600);
+            }
+
+            window.showToast = showToast;
+            window.openMask = function(id) {
+                const element = document.getElementById(id);
+                if (element) element.style.display = 'flex';
+            };
+            window.closeModal = function(id) {
+                const element = document.getElementById(id);
+                if (element) element.style.display = 'none';
+            };
+
+            setTheme(savedTheme);
+            themeToggle?.addEventListener('click', () => {
+                const current = root.getAttribute('data-theme') || 'light';
+                const index = themes.indexOf(current);
+                setTheme(themes[(index + 1) % themes.length]);
+            });
+
+            const uptime = document.getElementById('uptime');
+            if (uptime) {
+                let seconds = parseInt(uptime.dataset.uptimeSeconds || '0', 10);
+                const tick = () => {
+                    const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+                    const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+                    const s = String(seconds % 60).padStart(2, '0');
+                    uptime.textContent = `${h}:${m}:${s}`;
+                    seconds += 1;
+                };
+                tick();
+                setInterval(tick, 1000);
+            }
+
+            const flashMessage = {{ (message or '')|tojson }};
+            if (flashMessage) {
+                const type = /失败|错误|不能为空|异常|删除/.test(flashMessage) ? 'error' : /停用|警告/.test(flashMessage) ? 'warning' : 'success';
+                showToast(flashMessage, type, type === 'error' ? '操作失败' : '操作成功');
+            }
+        })();
+    </script>
+</body>
+</html>
+
+

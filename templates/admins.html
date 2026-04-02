@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid">
+    <div class="card" style="grid-column: span 4;">
+        <h3 class="panel-title">新增管理员</h3>
+        <form method="post">
+            <p><input name="username" placeholder="管理员用户名" required style="width:100%"></p>
+            <p><input name="password" type="password" placeholder="管理员密码" required style="width:100%"></p>
+            <p>
+                <select name="role" style="width:100%">
+                    <option value="operator">operator</option>
+                    <option value="auditor">auditor</option>
+                    <option value="super_admin">super_admin</option>
+                </select>
+            </p>
+            <button type="submit">创建管理员</button>
+        </form>
+    </div>
+    <div class="card" style="grid-column: span 8;">
+        <h3 class="panel-title">管理员治理说明</h3>
+        <p class="small">适用于运维、审计、客服等角色拆分。可按角色配置不同监控权限、用户治理能力与积分调整权限。</p>
+        <p class="small">当前版本提供管理员账号列表、状态切换和删除能力，适合后续接 RBAC 扩展。</p>
+        <form method="post" action="/admin/password" style="margin-top:16px;">
+            <div class="inline">
+                <input name="new_password" type="password" placeholder="修改当前登录管理员密码" required style="width:260px">
+                <button type="submit">更新我的密码</button>
+            </div>
+        </form>
+    </div>
+    <div class="card table-card">
+        <h3 class="panel-title">管理员列表</h3>
+        <table>
+            <thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+            <tbody>
+            {% for admin in admins %}
+                <tr>
+                    <td>{{ admin.username }}</td>
+                    <td>{{ admin.role }}</td>
+                    <td><span class="status {{ admin.status }}">{{ admin.status }}</span></td>
+                    <td>{{ admin.created_at }}</td>
+                    <td>
+                        <form class="inline" method="post" action="/admin/admins/{{ admin.id }}/status">
+                            <select name="status">
+                                <option value="active">active</option>
+                                <option value="disabled">disabled</option>
+                            </select>
+                            <button type="submit" class="secondary">改状态</button>
+                        </form>
+                        <form class="inline" method="post" action="/admin/admins/{{ admin.id }}/delete" style="margin-top:8px;">
+                            <button type="submit">删除</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

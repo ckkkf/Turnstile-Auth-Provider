@@ -1,0 +1,235 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<div class="grid">
+    <div class="card" style="grid-column: span 12;">
+        <div class="toolbar" style="margin-bottom:0;">
+            <h3 class="panel-title" style="margin:0;">用户管理</h3>
+            <div class="action-bar">
+                <button type="button" class="btn btn-primary" onclick="openMask('accountCreateMask')">新增用户</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card table-card">
+        <h3 class="panel-title">用户列表</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>用户名</th>
+                <th>邮箱</th>
+                <th>角色</th>
+                <th>套餐</th>
+                <th>积分</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in account_rows %}
+            {% set role_value = row.admin.role if row.admin else 'user' %}
+            <tr>
+                <td>{{ row.user.username if row.user else row.admin.username }}</td>
+                <td>{{ row.user.email if row.user else '-' }}</td>
+                <td>
+                    {% if role_value == 'super_admin' %}<span class="tag danger">超级管理员</span>
+                    {% elif role_value == 'auditor' %}<span class="tag warning">审计员</span>
+                    {% elif role_value == 'operator' %}<span class="tag success">管理员</span>
+                    {% else %}<span class="tag primary">普通用户</span>{% endif %}
+                </td>
+                <td>{{ row.user.plan if row.user else '-' }}</td>
+                <td>{{ row.user.points if row.user else '-' }}</td>
+                <td>
+                    {% set account_status = row.user.status if row.user else row.admin.status %}
+                    {% if account_status == 'active' %}<span class="tag success">启用</span>{% else %}<span class="tag danger">停用</span>{% endif %}
+                </td>
+                <td>{{ row.user.created_at if row.user else row.admin.created_at }}</td>
+                <td class="actions-cell">
+                    <div class="action-bar table-actions">
+                        {% if row.user %}
+                        <button type="button" class="btn" onclick='openAccountEdit({{ row.user|tojson|safe }}, {{ (row.admin or {})|tojson|safe }})'>编辑</button>
+                        {% if not row.is_admin %}<button type="button" class="btn btn-warning" onclick='openPromote({{ row.user|tojson|safe }})'>提升权限</button>{% endif %}
+                        <form method="post" action="/admin/accounts/user/{{ row.user.id }}/status">
+                            <input type="hidden" name="status" value="{% if row.user.status == 'active' %}disabled{% else %}active{% endif %}">
+                            <button type="submit" class="btn {% if row.user.status == 'active' %}btn-warning{% else %}btn-success{% endif %}">{% if row.user.status == 'active' %}停用{% else %}启用{% endif %}</button>
+                        </form>
+                        <form method="post" action="/admin/accounts/user/{{ row.user.id }}/delete">
+                            <button type="submit" class="btn btn-danger">删除</button>
+                        </form>
+                        {% else %}
+                        <button type="button" class="btn" onclick='openAdminOnlyEdit({{ row.admin|tojson|safe }})'>编辑</button>
+                        <form method="post" action="/admin/accounts/admin/{{ row.admin.id }}/status">
+                            <input type="hidden" name="status" value="{% if row.admin.status == 'active' %}disabled{% else %}active{% endif %}">
+                            <button type="submit" class="btn {% if row.admin.status == 'active' %}btn-warning{% else %}btn-success{% endif %}">{% if row.admin.status == 'active' %}停用{% else %}启用{% endif %}</button>
+                        </form>
+                        <form method="post" action="/admin/accounts/admin/{{ row.admin.id }}/delete">
+                            <button type="submit" class="btn btn-danger">删除</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="empty-tip">暂无用户</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card table-card">
+        <h3 class="panel-title">积分流水</h3>
+        <table>
+            <thead><tr><th>用户</th><th>变动</th><th>动作</th><th>说明</th><th>时间</th></tr></thead>
+            <tbody>
+            {% for item in point_logs %}
+                <tr>
+                    <td>{{ item.username or item.user_id }}</td>
+                    <td>{{ item.amount }}</td>
+                    <td>{{ item.action }}</td>
+                    <td>{{ item.description or '-' }}</td>
+                    <td>{{ item.created_at }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="empty-tip">暂无积分流水</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal-mask" id="accountCreateMask">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="panel-title" style="margin:0;">新增用户</h3>
+            <button type="button" class="modal-close" onclick="closeModal('accountCreateMask')">×</button>
+        </div>
+        <form method="post" action="/admin/accounts/user/create" class="modal-form">
+            <input name="username" placeholder="用户名" required>
+            <input name="email" placeholder="邮箱" required>
+            <select name="role">
+                <option value="user">普通用户</option>
+                <option value="operator">管理员</option>
+                <option value="auditor">审计员</option>
+                <option value="super_admin">超级管理员</option>
+            </select>
+            <select name="plan">
+                <option value="free">free</option>
+                <option value="starter">starter</option>
+                <option value="pro">pro</option>
+                <option value="enterprise">enterprise</option>
+            </select>
+            <input name="points" type="number" value="0" placeholder="初始积分">
+            <input class="full" name="password" type="password" placeholder="初始密码，默认 demo123456">
+            <div class="full action-bar" style="justify-content:flex-end; margin-top:4px;">
+                <button type="submit" class="btn btn-primary">确认新增</button>
+                <button type="button" class="btn" onclick="closeModal('accountCreateMask')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-mask" id="accountEditMask">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="panel-title" style="margin:0;">编辑用户</h3>
+            <button type="button" class="modal-close" onclick="closeModal('accountEditMask')">×</button>
+        </div>
+        <form id="accountEditForm" method="post" class="modal-form">
+            <input name="username" id="accountEditUsername" placeholder="用户名" required>
+            <input name="email" id="accountEditEmail" placeholder="邮箱" required>
+            <select name="role" id="accountEditRole">
+                <option value="user">普通用户</option>
+                <option value="operator">管理员</option>
+                <option value="auditor">审计员</option>
+                <option value="super_admin">超级管理员</option>
+            </select>
+            <select name="plan" id="accountEditPlan">
+                <option value="free">free</option>
+                <option value="starter">starter</option>
+                <option value="pro">pro</option>
+                <option value="enterprise">enterprise</option>
+            </select>
+            <input name="status" id="accountEditStatus" type="hidden" value="active">
+            <input name="new_password" type="password" placeholder="新密码，不修改可留空">
+            <input name="points_delta" type="number" value="0" placeholder="积分增减，例如 100 或 -50">
+            <input class="full" name="points_description" placeholder="积分变动说明">
+            <div class="full action-bar" style="justify-content:flex-end; margin-top:4px;">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn" onclick="closeModal('accountEditMask')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-mask" id="adminOnlyEditMask">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="panel-title" style="margin:0;">编辑用户</h3>
+            <button type="button" class="modal-close" onclick="closeModal('adminOnlyEditMask')">×</button>
+        </div>
+        <form id="adminOnlyEditForm" method="post" class="modal-form">
+            <input name="username" id="adminOnlyUsername" placeholder="用户名" required>
+            <select name="role" id="adminOnlyRole">
+                <option value="operator">管理员</option>
+                <option value="auditor">审计员</option>
+                <option value="super_admin">超级管理员</option>
+            </select>
+            <select name="status" id="adminOnlyStatus">
+                <option value="active">启用</option>
+                <option value="disabled">停用</option>
+            </select>
+            <input class="full" name="new_password" type="password" placeholder="新密码，不修改可留空">
+            <div class="full action-bar" style="justify-content:flex-end; margin-top:4px;">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn" onclick="closeModal('adminOnlyEditMask')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-mask" id="promoteMask">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="panel-title" style="margin:0;">提升权限</h3>
+            <button type="button" class="modal-close" onclick="closeModal('promoteMask')">×</button>
+        </div>
+        <form id="promoteForm" method="post" class="modal-form">
+            <select name="role">
+                <option value="operator">管理员</option>
+                <option value="auditor">审计员</option>
+                <option value="super_admin">超级管理员</option>
+            </select>
+            <input class="full" name="password" type="password" placeholder="管理员初始密码，默认 admin123456">
+            <div class="full action-bar" style="justify-content:flex-end; margin-top:4px;">
+                <button type="submit" class="btn btn-warning">确认提升</button>
+                <button type="button" class="btn" onclick="closeModal('promoteMask')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAccountEdit(user, admin) {
+    const form = document.getElementById('accountEditForm');
+    form.action = `/admin/accounts/user/${user.id}/update`;
+    document.getElementById('accountEditUsername').value = user.username || '';
+    document.getElementById('accountEditEmail').value = user.email || '';
+    document.getElementById('accountEditPlan').value = user.plan || 'free';
+    document.getElementById('accountEditStatus').value = user.status || 'active';
+    document.getElementById('accountEditRole').value = admin && admin.role ? admin.role : 'user';
+    openMask('accountEditMask');
+}
+function openAdminOnlyEdit(admin) {
+    const form = document.getElementById('adminOnlyEditForm');
+    form.action = `/admin/accounts/admin/${admin.id}/update`;
+    document.getElementById('adminOnlyUsername').value = admin.username || '';
+    document.getElementById('adminOnlyRole').value = admin.role || 'operator';
+    document.getElementById('adminOnlyStatus').value = admin.status || 'active';
+    openMask('adminOnlyEditMask');
+}
+function openPromote(user) {
+    document.getElementById('promoteForm').action = `/admin/accounts/user/${user.id}/promote`;
+    openMask('promoteMask');
+}
+</script>
+{% endblock %}

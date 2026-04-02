@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="newapi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册 - flexapi-captcha</title>
+    <style>
+        :root { --bg:#070b14; --card:rgba(12,18,31,.92); --text:#f4f7ff; --muted:#9ba7c2; --border:rgba(255,255,255,.08); --secondary:#6be5ea; --success:#67c23a; --danger:#f56c6c; }
+        html[data-theme='light'] { --bg:#f5f7fb; --card:#fff; --text:#1f2d3d; --muted:#6b7280; --border:#e5eaf3; --secondary:#27c6d9; }
+        * { box-sizing:border-box; }
+        body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:var(--text); background:radial-gradient(circle at top left, rgba(107,229,234,.18), transparent 26%), radial-gradient(circle at top right, rgba(124,92,255,.14), transparent 26%), var(--bg); }
+        .page-tools { position:fixed; top:20px; right:20px; z-index:20; }
+        .card { width:min(520px, 100%); padding:34px; border-radius:24px; border:1px solid var(--border); background:var(--card); box-shadow:0 24px 80px rgba(0,0,0,.35); }
+        h1 { margin:0 0 8px; }
+        p { color:var(--muted); line-height:1.8; }
+        input, button { width:100%; padding:14px 16px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--text); font:inherit; margin-top:12px; }
+        button { background:var(--card); font-weight:700; }
+        .toolbar { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+        .theme-toggle { width:36px; height:36px; padding:0; border-radius:8px; background:rgba(255,255,255,.05); }
+        .links { margin-top:18px; display:flex; justify-content:space-between; gap:12px; }
+        a { color:var(--secondary); text-decoration:none; }
+        .toast-stack { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 12px; }
+        .toast { min-width: 320px; max-width: 420px; display:flex; gap:12px; padding:14px 16px; border-radius:12px; border:1px solid var(--border); background:var(--card); box-shadow:0 16px 36px rgba(0,0,0,.2); animation:toastIn .28s cubic-bezier(.21,1.02,.73,1) forwards; position:relative; overflow:hidden; }
+        .toast::before { content:''; position:absolute; inset:0 auto 0 0; width:4px; background:var(--secondary); }
+        .toast.success::before { background: var(--success); }
+        .toast.error::before { background: var(--danger); }
+        .toast-icon { width:28px; height:28px; flex:0 0 28px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,.08); }
+        .toast-close { margin-left:auto; border:none; background:transparent; color:var(--muted); width:auto; padding:0; }
+        @keyframes toastIn { from { transform: translate3d(0,-16px,0) scale(.96); opacity: 0; } to { transform: translate3d(0,0,0) scale(1); opacity: 1; } }
+        @keyframes toastOut { from { opacity:1; } to { opacity:0; transform: translate3d(0,-10px,0) scale(.96); } }
+    </style>
+</head>
+<body>
+    <div class="toast-stack" id="toastStack"></div>
+    <div class="page-tools"><button type="button" id="themeToggle" class="theme-toggle" title="切换主题" aria-label="切换主题">◐</button></div>
+    <div class="card">
+        <div class="toolbar">
+            <div>
+                <h1>创建账户</h1>
+                <p>注册后即可从统一登录页进入账户中心，使用常用服务模块。</p>
+            </div>
+        </div>
+        <form method="post">
+            <input name="username" placeholder="用户名" required>
+            <input name="email" type="email" placeholder="邮箱" required>
+            <input name="password" type="password" placeholder="密码" required>
+            <button type="submit">立即注册</button>
+        </form>
+        <div class="links">
+            <a href="/login">去登录</a>
+            <a href="/">返回首页</a>
+        </div>
+    </div>
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const toggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('portal-auth-theme') || 'newapi';
+            root.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'newapi');
+            toggle?.addEventListener('click', () => {
+                const next = root.getAttribute('data-theme') === 'light' ? 'newapi' : 'light';
+                root.setAttribute('data-theme', next);
+                localStorage.setItem('portal-auth-theme', next);
+            });
+            const message = {{ (message or '')|tojson }};
+            if (!message) return;
+            const stack = document.getElementById('toastStack');
+            const toast = document.createElement('div');
+            const type = /错误|失败|不能为空/.test(message) ? 'error' : 'success';
+            const icon = type === 'error' ? '✕' : '✓';
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<div class="toast-icon">${icon}</div><div style="flex:1;line-height:1.7;">${message}</div><button class="toast-close" type="button">×</button>`;
+            const removeToast = () => { toast.style.animation = 'toastOut .22s ease forwards'; setTimeout(() => toast.remove(), 220); };
+            toast.querySelector('.toast-close').addEventListener('click', removeToast);
+            stack.appendChild(toast);
+            setTimeout(removeToast, 3600);
+        })();
+    </script>
+</body>
+</html>

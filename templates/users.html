@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid">
+    <div class="card" style="grid-column: span 4;">
+        <h3 class="panel-title">新增用户</h3>
+        <form method="post">
+            <p><input name="username" placeholder="用户名" required style="width:100%"></p>
+            <p><input name="email" placeholder="邮箱" required style="width:100%"></p>
+            <p>
+                <select name="plan" style="width:100%">
+                    <option value="free">free</option>
+                    <option value="starter">starter</option>
+                    <option value="pro">pro</option>
+                    <option value="enterprise">enterprise</option>
+                </select>
+            </p>
+            <p><input name="points" type="number" value="0" placeholder="初始积分" style="width:100%"></p>
+            <button type="submit">创建用户</button>
+        </form>
+    </div>
+
+    <div class="card" style="grid-column: span 8;">
+        <h3 class="panel-title">积分服务说明</h3>
+        <p class="small">支持对用户进行积分充值、扣减、流水追踪，可用于 API 次数配额、会员功能包或人工补偿。</p>
+        <p class="small">推荐结合用户状态与套餐等级统一管理，例如 `pro` 用户赠送更多并发配额与积分。</p>
+    </div>
+
+    <div class="card table-card">
+        <h3 class="panel-title">用户列表</h3>
+        <table>
+            <thead><tr><th>用户名</th><th>邮箱</th><th>套餐</th><th>积分</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.plan }}</td>
+                    <td>{{ user.points }}</td>
+                    <td><span class="status {{ user.status }}">{{ user.status }}</span></td>
+                    <td>{{ user.created_at }}</td>
+                    <td>
+                        <form class="inline" method="post" action="/admin/users/{{ user.id }}/status">
+                            <select name="status">
+                                <option value="active">active</option>
+                                <option value="disabled">disabled</option>
+                            </select>
+                            <button type="submit" class="secondary">改状态</button>
+                        </form>
+                        <form class="inline" method="post" action="/admin/users/{{ user.id }}/points" style="margin-top:8px;">
+                            <input name="amount" type="number" placeholder="积分变动" style="width:120px">
+                            <input name="description" placeholder="说明" style="width:180px">
+                            <button type="submit">调积分</button>
+                        </form>
+                        <form class="inline" method="post" action="/admin/users/{{ user.id }}/delete" style="margin-top:8px;">
+                            <button type="submit" class="secondary">删除</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card table-card">
+        <h3 class="panel-title">积分流水</h3>
+        <table>
+            <thead><tr><th>用户</th><th>变动</th><th>动作</th><th>说明</th><th>时间</th></tr></thead>
+            <tbody>
+            {% for item in point_logs %}
+                <tr>
+                    <td>{{ item.username or item.user_id }}</td>
+                    <td>{{ item.amount }}</td>
+                    <td>{{ item.action }}</td>
+                    <td>{{ item.description or '-' }}</td>
+                    <td>{{ item.created_at }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .toolbar { margin-bottom: 18px; }
+    .doc-layout { display: block; }
+    .doc-shell { display:grid; grid-template-columns: 260px 1fr; gap: 18px; }
+    .doc-sidebar { position: sticky; top: 90px; align-self: start; border-right: none; }
+    .doc-nav { display: grid; gap: 8px; }
+    .doc-nav a { padding: 10px 12px; border-radius: 8px; color: var(--muted); background: rgba(0,0,0,.02); }
+    .doc-nav a:hover, .doc-nav a.active { color: var(--primary); background: var(--primary-soft); }
+    .doc-section { scroll-margin-top: 100px; }
+    .endpoint { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; }
+    .method { padding: 4px 8px; border-radius: 999px; font-size: 12px; color: #fff; background: var(--success); }
+    .path { font-family: Consolas, monospace; }
+    .lang-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .lang-tab { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--card-strong); cursor: pointer; }
+    .lang-tab.active { color: #fff; background: var(--primary); border-color: var(--primary); }
+    .code-wrap { position: relative; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; z-index: 2; }
+    .code-panel { display: none; margin: 0; padding: 16px; border-radius: 14px; background: #0f172a; color: #dbeafe; overflow: auto; border: 1px solid rgba(255,255,255,.06); }
+    .code-panel.active { display: block; }
+    .doc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .tip-list { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.9; }
+    @media (max-width: 980px) { .doc-layout, .doc-grid { grid-template-columns: 1fr; } .doc-sidebar { position: static; } }
+</style>
+
+<div class="doc-layout">
+    <div class="card" style="margin-bottom:14px;">
+        <h3 class="panel-title">开发者接口文档</h3>
+        <p class="small">文档页面也统一到 `flexapi-captcha` 控制台风格，右上角不再单独放一个带左边框的异形区域。</p>
+    </div>
+    <div class="doc-shell">
+        <aside class="doc-sidebar card">
+            <h3 class="panel-title">文档导航</h3>
+            <div class="small" style="margin-bottom:12px;">公共页面入口</div>
+            <nav class="doc-nav" style="margin-bottom:14px;">
+                <a href="/">返回首页</a>
+                <a href="/login">登录</a>
+                <a href="/user/register">注册</a>
+                <a href="/user/center">个人设置</a>
+            </nav>
+            <div class="small" style="margin-bottom:12px;">接口目录</div>
+            <nav class="doc-nav" id="docNav">
+                <a href="#overview">概览</a>
+                <a href="#create-task">提交求解任务</a>
+                <a href="#query-result">查询任务结果</a>
+                <a href="#response-format">返回格式</a>
+                <a href="#best-practice">接入建议</a>
+            </nav>
+        </aside>
+
+        <div style="display:grid; gap:14px;">
+        <section class="card doc-section" id="overview">
+            <h3 class="panel-title">接口概览</h3>
+            <div class="doc-grid">
+                <div class="card">
+                    <div class="endpoint"><span class="method">GET</span><span class="path">/turnstile</span></div>
+                    <p class="small">提交求解任务，返回 `taskId`。</p>
+                </div>
+                <div class="card">
+                    <div class="endpoint"><span class="method">GET</span><span class="path">/result</span></div>
+                    <p class="small">根据 `taskId` 轮询结果，直到获得 `solution.token`。</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="card doc-section" id="create-task">
+            <h3 class="panel-title">提交求解任务</h3>
+            <p class="small"><span class="endpoint"><span class="method">GET</span><span class="path">/turnstile?url=https://example.com&sitekey=0x4AAAA</span></span></p>
+            <table>
+                <thead><tr><th>参数</th><th>说明</th><th>必填</th></tr></thead>
+                <tbody>
+                    <tr><td><code>url</code></td><td>目标页面地址</td><td>是</td></tr>
+                    <tr><td><code>sitekey</code></td><td>Turnstile 站点 Key</td><td>是</td></tr>
+                    <tr><td><code>action</code></td><td>可选动作参数</td><td>否</td></tr>
+                    <tr><td><code>cdata</code></td><td>可选自定义数据</td><td>否</td></tr>
+                </tbody>
+            </table>
+
+            <div class="lang-tabs" data-tabs="create">
+                <button class="lang-tab active" data-lang="curl">cURL</button>
+                <button class="lang-tab" data-lang="python">Python</button>
+                <button class="lang-tab" data-lang="javascript">JavaScript</button>
+                <button class="lang-tab" data-lang="php">PHP</button>
+            </div>
+            <div class="code-wrap">
+                <button type="button" class="btn copy-btn" data-copy-target="create">复制代码</button>
+                <pre class="code-panel active" data-group="create" data-lang="curl">curl "http://127.0.0.1:5072/turnstile?url=https://example.com/login&amp;sitekey=0x4AAAAAACgP975UcSubdv3v"</pre>
+                <pre class="code-panel" data-group="create" data-lang="python">import requests
+
+res = requests.get(
+    "http://127.0.0.1:5072/turnstile",
+    params={
+        "url": "https://example.com/login",
+        "sitekey": "0x4AAAAAACgP975UcSubdv3v"
+    }
+).json()
+
+print(res)</pre>
+                <pre class="code-panel" data-group="create" data-lang="javascript">const params = new URLSearchParams({
+  url: 'https://example.com/login',
+  sitekey: '0x4AAAAAACgP975UcSubdv3v'
+});
+
+const res = await fetch(`http://127.0.0.1:5072/turnstile?${params}`);
+console.log(await res.json());</pre>
+                <pre class="code-panel" data-group="create" data-lang="php">&lt;?php
+$query = http_build_query([
+    'url' =&gt; 'https://example.com/login',
+    'sitekey' =&gt; '0x4AAAAAACgP975UcSubdv3v',
+]);
+
+$result = file_get_contents("http://127.0.0.1:5072/turnstile?$query");
+echo $result;</pre>
+            </div>
+        </section>
+
+        <section class="card doc-section" id="query-result">
+            <h3 class="panel-title">查询任务结果</h3>
+            <p class="small"><span class="endpoint"><span class="method">GET</span><span class="path">/result?id=&lt;taskId&gt;</span></span></p>
+            <div class="lang-tabs" data-tabs="result">
+                <button class="lang-tab active" data-lang="curl">cURL</button>
+                <button class="lang-tab" data-lang="python">Python</button>
+                <button class="lang-tab" data-lang="javascript">JavaScript</button>
+                <button class="lang-tab" data-lang="php">PHP</button>
+            </div>
+            <div class="code-wrap">
+                <button type="button" class="btn copy-btn" data-copy-target="result">复制代码</button>
+                <pre class="code-panel active" data-group="result" data-lang="curl">curl "http://127.0.0.1:5072/result?id=task-id-here"</pre>
+                <pre class="code-panel" data-group="result" data-lang="python">import requests, time
+
+task_id = 'task-id-here'
+while True:
+    data = requests.get('http://127.0.0.1:5072/result', params={'id': task_id}).json()
+    print(data)
+    if data.get('status') != 'processing':
+        break
+    time.sleep(1)</pre>
+                <pre class="code-panel" data-group="result" data-lang="javascript">const taskId = 'task-id-here';
+const timer = setInterval(async () =&gt; {
+  const res = await fetch(`http://127.0.0.1:5072/result?id=${taskId}`);
+  const data = await res.json();
+  console.log(data);
+  if (data.status !== 'processing') clearInterval(timer);
+}, 1000);</pre>
+                <pre class="code-panel" data-group="result" data-lang="php">&lt;?php
+$taskId = 'task-id-here';
+$result = file_get_contents("http://127.0.0.1:5072/result?id={$taskId}");
+echo $result;</pre>
+            </div>
+        </section>
+
+        <section class="card doc-section" id="response-format">
+            <h3 class="panel-title">返回格式</h3>
+            <div class="doc-grid">
+                <div class="card">
+                    <h3>创建任务成功</h3>
+                    <pre class="code-panel active">{
+  "taskId": "f0dbe75b-fa76-41ad-89aa-4d3a392040af"
+}</pre>
+                </div>
+                <div class="card">
+                    <h3>处理中</h3>
+                    <pre class="code-panel active">{
+  "status": "processing"
+}</pre>
+                </div>
+                <div class="card">
+                    <h3>成功结果</h3>
+                    <pre class="code-panel active">{
+  "status": "ready",
+  "solution": {
+    "token": "0.xxx"
+  },
+  "elapsed_time": 7.62
+}</pre>
+                </div>
+                <div class="card">
+                    <h3>失败结果</h3>
+                    <pre class="code-panel active">{
+  "status": "failed",
+  "value": "CAPTCHA_FAIL",
+  "elapsed_time": 30.0
+}</pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="card doc-section" id="best-practice">
+            <h3 class="panel-title">接入建议</h3>
+            <ul class="tip-list">
+                <li>提交任务后使用 1 秒轮询间隔，避免无意义高频请求。</li>
+                <li>生产环境建议把服务地址、重试策略和超时配置放入统一配置中心。</li>
+                <li>如果你有多业务线接入，建议通过 API Key、IP 白名单和调用日志做隔离治理。</li>
+                <li>若需要内部运营能力，请单独进入管理员后台，不在公共文档暴露后台接口。</li>
+            </ul>
+        </section>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.lang-tabs').forEach((tabGroup) => {
+        tabGroup.addEventListener('click', (event) => {
+            const button = event.target.closest('.lang-tab');
+            if (!button) return;
+            const wrapper = tabGroup.parentElement;
+            const group = tabGroup.dataset.tabs;
+            tabGroup.querySelectorAll('.lang-tab').forEach((item) => item.classList.toggle('active', item === button));
+            wrapper.querySelectorAll(`.code-panel[data-group="${group}"]`).forEach((panel) => {
+                panel.classList.toggle('active', panel.dataset.lang === button.dataset.lang);
+            });
+        });
+    });
+
+    document.querySelectorAll('.copy-btn').forEach((button) => {
+        button.addEventListener('click', async () => {
+            const group = button.dataset.copyTarget;
+            const active = document.querySelector(`.code-panel[data-group="${group}"].active`);
+            if (!active) return;
+            await navigator.clipboard.writeText(active.textContent);
+            showToast('代码已复制到剪贴板', 'success', '复制成功');
+        });
+    });
+
+    const docLinks = [...document.querySelectorAll('#docNav a')];
+    const sections = docLinks.map((link) => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            docLinks.forEach((link) => link.classList.toggle('active', link.getAttribute('href') === `#${entry.target.id}`));
+        });
+    }, { rootMargin: '-25% 0px -60% 0px', threshold: 0 });
+    sections.forEach((section) => observer.observe(section));
+</script>
+{% endblock %}

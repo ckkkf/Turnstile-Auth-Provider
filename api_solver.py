@@ -5,13 +5,17 @@ import uuid
 import random
 import logging
 import asyncio
+from collections import deque
+from datetime import datetime
 from typing import Optional, Union
 import argparse
-from quart import Quart, request, jsonify
+from quart import Quart, request, jsonify, render_template, session
 from camoufox.async_api import AsyncCamoufox
 from patchright.async_api import async_playwright
-from db_results import configure_database, init_db, save_result, load_result, cleanup_old_results
+from db_results import configure_database, get_database_config, init_db, save_result, load_result, cleanup_old_results
 from browser_configs import browser_config
+from portal_ui import ManagementPortal
+from proxy_pool import ensure_default_proxy_pool, select_proxy
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -52,17 +56,36 @@ class CustomLogger(logging.Logger):
         super().error(self.format_message('ERROR', 'RED', message), *args, **kwargs)
 
 
+class MemoryLogHandler(logging.Handler):
+    def __init__(self, capacity: int = 300):
+        super().__init__()
+        self.records = deque(maxlen=capacity)
+
+    def emit(self, record):
+        self.records.append(
+            {
+                "level": record.levelname,
+                "message": record.getMessage(),
+                "created_at": datetime.fromtimestamp(record.created).strftime('%Y-%m-%d %H:%M:%S'),
+            }
+        )
+
+
 logging.setLoggerClass(CustomLogger)
 logger = logging.getLogger("TurnstileAPIServer")
 logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(handler)
+memory_handler = MemoryLogHandler()
+logger.addHandler(memory_handler)
 
 
 class TurnstileAPIServer:
 
     def __init__(self, headless: bool, useragent: Optional[str], debug: bool, browser_type: str, thread: int, proxy_support: bool, use_random_config: bool = False, browser_name: Optional[str] = None, browser_version: Optional[str] = None):
         self.app = Quart(__name__)
+        self.app.secret_key = os.getenv("SESSION_SECRET", "turnstile-auth-provider-secret")
+        self.started_at = time.time()
         self.debug = debug
         self.browser_type = browser_type
         self.headless = headless
@@ -100,34 +123,57 @@ class TurnstileAPIServer:
             self.browser_args.append(f"--user-agent={self.useragent}")
 
         self._setup_routes()
+        self.portal = ManagementPortal(self)
+        self.portal.register_routes()
+
+    def get_recent_logs(self, limit: int = 30):
+        return list(memory_handler.records)[-limit:][::-1]
+
+    def get_runtime_metrics(self):
+        uptime_seconds = int(time.time() - self.started_at)
+        hours, remainder = divmod(uptime_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return {
+            "uptime_seconds": uptime_seconds,
+            "uptime_human": f"{hours:02d}:{minutes:02d}:{seconds:02d}",
+            "started_at_iso": datetime.fromtimestamp(self.started_at).strftime('%Y-%m-%d %H:%M:%S'),
+            "browser_pool_size": self.browser_pool.qsize(),
+            "thread_count": self.thread_count,
+            "browser_type": self.browser_type,
+            "headless": self.headless,
+            "database": get_database_config(),
+        }
 
     def display_welcome(self):
         """Displays welcome screen with logo."""
-        self.console.clear()
-        
-        combined_text = Text()
-        combined_text.append("\n📢 Channel: ", style="bold white")
-        combined_text.append("https://t.me/D3_vin", style="cyan")
-        combined_text.append("\n💬 Chat: ", style="bold white")
-        combined_text.append("https://t.me/D3vin_chat", style="cyan")
-        combined_text.append("\n📁 GitHub: ", style="bold white")
-        combined_text.append("https://github.com/D3-vin", style="cyan")
-        combined_text.append("\n📁 Version: ", style="bold white")
-        combined_text.append("1.2b", style="green")
-        combined_text.append("\n")
+        try:
+            self.console.clear()
 
-        info_panel = Panel(
-            Align.left(combined_text),
-            title="[bold blue]Turnstile Solver[/bold blue]",
-            subtitle="[bold magenta]Dev by D3vin[/bold magenta]",
-            box=box.ROUNDED,
-            border_style="bright_blue",
-            padding=(0, 1),
-            width=50
-        )
+            combined_text = Text()
+            combined_text.append("\n📢 Channel: ", style="bold white")
+            combined_text.append("https://t.me/D3_vin", style="cyan")
+            combined_text.append("\n💬 Chat: ", style="bold white")
+            combined_text.append("https://t.me/D3vin_chat", style="cyan")
+            combined_text.append("\n📁 GitHub: ", style="bold white")
+            combined_text.append("https://github.com/D3-vin", style="cyan")
+            combined_text.append("\n📁 Version: ", style="bold white")
+            combined_text.append("1.2b", style="green")
+            combined_text.append("\n")
 
-        self.console.print(info_panel)
-        self.console.print()
+            info_panel = Panel(
+                Align.left(combined_text),
+                title="[bold blue]Turnstile Solver[/bold blue]",
+                subtitle="[bold magenta]Dev by D3vin[/bold magenta]",
+                box=box.ROUNDED,
+                border_style="bright_blue",
+                padding=(0, 1),
+                width=50
+            )
+
+            self.console.print(info_panel)
+            self.console.print()
+        except UnicodeEncodeError:
+            logger.info("Turnstile Solver started")
 
 
 
@@ -145,6 +191,7 @@ class TurnstileAPIServer:
         self.display_welcome()
         logger.info("Starting browser initialization")
         try:
+            ensure_default_proxy_pool()
             await init_db()
             await self._initialize_browser()
             
@@ -501,25 +548,25 @@ class TurnstileAPIServer:
                 logger.warning(f"Browser {index}: Cannot check browser state: {str(e)}")
 
         if self.proxy_support:
-            proxy_file_path = os.path.join(os.getcwd(), "proxies.txt")
+            proxy = select_proxy()
 
-            try:
-                with open(proxy_file_path) as proxy_file:
-                    proxies = [line.strip() for line in proxy_file if line.strip()]
+            if not proxy:
+                proxy_file_path = os.path.join(os.getcwd(), "proxies.txt")
+                try:
+                    with open(proxy_file_path) as proxy_file:
+                        proxies = [line.strip() for line in proxy_file if line.strip()]
+                    proxy = random.choice(proxies) if proxies else None
+                except FileNotFoundError:
+                    logger.warning(f"Proxy file not found: {proxy_file_path}")
+                    proxy = None
+                except Exception as e:
+                    logger.error(f"Error reading proxy file: {str(e)}")
+                    proxy = None
 
-                proxy = random.choice(proxies) if proxies else None
-                
-                if self.debug and proxy:
-                    logger.debug(f"Browser {index}: Selected proxy: {proxy}")
-                elif self.debug and not proxy:
-                    logger.debug(f"Browser {index}: No proxies available")
-                    
-            except FileNotFoundError:
-                logger.warning(f"Proxy file not found: {proxy_file_path}")
-                proxy = None
-            except Exception as e:
-                logger.error(f"Error reading proxy file: {str(e)}")
-                proxy = None
+            if self.debug and proxy:
+                logger.debug(f"Browser {index}: Selected proxy: {proxy}")
+            elif self.debug and not proxy:
+                logger.debug(f"Browser {index}: No proxies available")
 
             if proxy:
                 if '@' in proxy:
@@ -854,58 +901,23 @@ class TurnstileAPIServer:
 
     @staticmethod
     async def index():
-        """Serve the API documentation page."""
-        return """
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Turnstile Solver API</title>
-                <script src="https://cdn.tailwindcss.com"></script>
-            </head>
-            <body class="bg-gray-900 text-gray-200 min-h-screen flex items-center justify-center">
-                <div class="bg-gray-800 p-8 rounded-lg shadow-md max-w-2xl w-full border border-red-500">
-                    <h1 class="text-3xl font-bold mb-6 text-center text-red-500">Welcome to Turnstile Solver API</h1>
-
-                    <p class="mb-4 text-gray-300">To use the turnstile service, send a GET request to 
-                       <code class="bg-red-700 text-white px-2 py-1 rounded">/turnstile</code> with the following query parameters:</p>
-
-                    <ul class="list-disc pl-6 mb-6 text-gray-300">
-                        <li><strong>url</strong>: The URL where Turnstile is to be validated</li>
-                        <li><strong>sitekey</strong>: The site key for Turnstile</li>
-                    </ul>
-
-                    <div class="bg-gray-700 p-4 rounded-lg mb-6 border border-red-500">
-                        <p class="font-semibold mb-2 text-red-400">Example usage:</p>
-                        <code class="text-sm break-all text-red-300">/turnstile?url=https://example.com&sitekey=sitekey</code>
-                    </div>
-
-
-                    <div class="bg-gray-700 p-4 rounded-lg mb-6">
-                        <p class="text-gray-200 font-semibold mb-3">📢 Connect with Us</p>
-                        <div class="space-y-2 text-sm">
-                            <p class="text-gray-300">
-                                📢 <strong>Channel:</strong> 
-                                <a href="https://t.me/D3_vin" class="text-red-300 hover:underline">https://t.me/D3_vin</a> 
-                                - Latest updates and releases
-                            </p>
-                            <p class="text-gray-300">
-                                💬 <strong>Chat:</strong> 
-                                <a href="https://t.me/D3vin_chat" class="text-red-300 hover:underline">https://t.me/D3vin_chat</a> 
-                                - Community support and discussions
-                            </p>
-                            <p class="text-gray-300">
-                                📁 <strong>GitHub:</strong> 
-                                <a href="https://github.com/D3-vin" class="text-red-300 hover:underline">https://github.com/D3-vin</a> 
-                                - Source code and development
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </body>
-            </html>
-        """
+        """Serve the landing page."""
+        return await render_template(
+            "index.html",
+            admin_session={
+                "id": session.get("admin_id"),
+                "username": session.get("admin_username"),
+                "role": session.get("admin_role"),
+                "logged_in": bool(session.get("admin_id")),
+            },
+            user_session={
+                "id": session.get("user_id"),
+                "username": session.get("user_username"),
+                "role": session.get("user_role"),
+                "kind": session.get("user_kind", "user"),
+                "logged_in": bool(session.get("user_id")),
+            },
+        )
 
 
 def parse_args():

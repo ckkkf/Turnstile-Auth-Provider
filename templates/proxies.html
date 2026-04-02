@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.pool-row-active > td { background: var(--primary-soft); }
+.pool-row-active + tr > td { background: color-mix(in srgb, var(--primary-soft) 72%, transparent); }
+</style>
+<div class="grid">
+    <div class="card" style="grid-column: span 12;">
+        <div class="toolbar" style="margin-bottom:0;">
+            <h3 class="panel-title" style="margin:0;">代理池管理</h3>
+            <button type="button" class="btn btn-primary" onclick="openMask('proxyCreateMask')">新增代理池</button>
+        </div>
+    </div>
+
+    <div class="card table-card">
+        <h3 class="panel-title">代理池列表</h3>
+        <table>
+            <thead><tr><th>名称</th><th>策略</th><th>数量</th><th>状态</th><th>当前池</th><th>操作</th></tr></thead>
+            <tbody>
+            {% for pool in proxy_pools %}
+            <tr class="{% if pool.is_active %}pool-row-active{% endif %}">
+                <td>{{ pool.name }}</td>
+                <td>{% if pool.strategy == 'round_robin' %}轮询{% elif pool.strategy == 'random' %}随机{% elif pool.strategy == 'first' %}固定首个{% else %}{{ pool.strategy }}{% endif %}</td>
+                <td>{{ pool.size }}</td>
+                <td>{% if pool.enabled %}<span class="tag success">启用</span>{% else %}<span class="tag danger">停用</span>{% endif %}</td>
+                <td>{% if pool.is_active %}<span class="tag warning">当前使用</span>{% else %}-{% endif %}</td>
+                <td>
+                    <div class="action-bar">
+                        <form method="post" action="/admin/proxies/{{ pool.id }}/activate"><button type="submit" class="btn btn-primary">切换</button></form>
+                        <button type="button" class="btn" onclick='openProxyEdit({{ pool|tojson|safe }})'>编辑</button>
+                        <button type="button" class="btn btn-success" onclick='openProxyImport({{ pool|tojson|safe }})'>导入代理</button>
+                        <form method="post" action="/admin/proxies/{{ pool.id }}/delete"><button type="submit" class="btn btn-danger">删除</button></form>
+                    </div>
+                </td>
+            </tr>
+            <tr class="{% if pool.is_active %}pool-row-active{% endif %}">
+                <td colspan="6">
+                    {% if pool.proxies %}
+                    <table style="margin-top:8px;">
+                        <thead><tr><th>代理</th><th>操作</th></tr></thead>
+                        <tbody>
+                        {% for proxy in pool.proxies %}
+                        <tr>
+                            <td class="log-line">{{ proxy }}</td>
+                            <td>
+                                <form method="post" action="/admin/proxies/{{ pool.id }}/remove-item">
+                                    <input type="hidden" name="proxy_value" value="{{ proxy }}">
+                                    <button type="submit" class="btn btn-danger">移除</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-tip">当前代理池暂无代理</div>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="empty-tip">暂无代理池</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal-mask" id="proxyCreateMask">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="panel-title" style="margin:0;">新增代理池</h3>
+            <button type="button" class="modal-close" onclick="closeModal('proxyCreateMask')">×</button>
+        </div>
+        <form method="post" action="/admin/proxies/create" class="modal-form">
+            <input name="name" placeholder="代理池名称" required>
+            <select name="strategy">
+                <option value="round_robin">轮询</option>
+                <option value="random">随机</option>
+                <option value="first">固定首个</option>
+            </select>
+            <select class="full" name="enabled">
+                <option value="true">启用</option>
+                <option value="false">停用</option>
+            </select>
+            <div class="full action-bar" style="justify-content:flex-end; margin-top:4px;">
+                <button type="submit" class="btn btn-primary">确认新增</button>
+                <button type="button" class="btn" onclick="closeModal('proxyCreateMask')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-mask" id="proxyEditMask">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="panel-title" style="margin:0;">编辑代理池</h3>
+            <button type="button" class="modal-close" onclick="closeModal('proxyEditMask')">×</button>
+        </div>
+        <form id="proxyEditForm" method="post" class="modal-form">
+            <input name="name" id="proxyEditName" placeholder="代理池名称" required>
+            <select name="strategy" id="proxyEditStrategy">
+                <option value="round_robin">轮询</option>
+                <option value="random">随机</option>
+                <option value="first">固定首个</option>
+            </select>
+            <select class="full" name="enabled" id="proxyEditEnabled">
+                <option value="true">启用</option>
+                <option value="false">停用</option>
+            </select>
+            <div class="full action-bar" style="justify-content:flex-end; margin-top:4px;">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn" onclick="closeModal('proxyEditMask')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-mask" id="proxyImportMask">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="panel-title" style="margin:0;">批量导入代理</h3>
+            <button type="button" class="modal-close" onclick="closeModal('proxyImportMask')">×</button>
+        </div>
+        <form id="proxyImportForm" method="post">
+            <textarea name="proxies" placeholder="每行一条代理，支持 http://user:pass@ip:port 或 http:ip:port:user:pass"></textarea>
+            <div class="action-bar" style="justify-content:flex-end; margin-top:12px;">
+                <button type="submit" class="btn btn-success">导入到当前池</button>
+                <button type="button" class="btn" onclick="closeModal('proxyImportMask')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openProxyEdit(pool) {
+    const form = document.getElementById('proxyEditForm');
+    form.action = `/admin/proxies/${pool.id}/update`;
+    document.getElementById('proxyEditName').value = pool.name || '';
+    document.getElementById('proxyEditStrategy').value = pool.strategy || 'round_robin';
+    document.getElementById('proxyEditEnabled').value = pool.enabled ? 'true' : 'false';
+    openMask('proxyEditMask');
+}
+function openProxyImport(pool) {
+    document.getElementById('proxyImportForm').action = `/admin/proxies/${pool.id}/import`;
+    openMask('proxyImportMask');
+}
+</script>
+{% endblock %}

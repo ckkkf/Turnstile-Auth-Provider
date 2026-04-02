@@ -1,234 +1,70 @@
-# Cloudflare - Turnstile Solver NEW
+# Turnstile Solver 门户版
 
-## 📢 Connect with Us
+一个基于 Python 的 Turnstile 求解服务，集成了统一账户中心、管理员后台、代理池管理、开发者接口文档和运维面板。
 
-- **📢 Channel**: [https://t.me/D3_vin](https://t.me/D3_vin) - Latest updates and releases
-- **💬 Chat**: [https://t.me/D3vin_chat](https://t.me/D3vin_chat) - Community support and discussions
-- **📁 GitHub**: [https://github.com/D3-vin](https://github.com/D3-vin) - Source code and development
+## 项目亮点
 
-![Python](https://img.shields.io/badge/Python-3.6+-blue)
-![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
-![License](https://img.shields.io/badge/License-Educational%20Use-green)
+- 统一服务门户：首页提供滚动导航、能力介绍、服务说明和页面展示。
+- 开发者文档：面向调用方展示公开接口，不暴露管理员后台接口。
+- 统一账户中心：普通用户与管理员都可登录账户中心，但权限展示严格隔离。
+- 管理后台：提供账号管理、代理池管理、任务耗时统计和高级运维图表。
+- 丰富交互：右上角提示、若依风格新增/编辑弹窗、多主题切换。
 
+## 页面预览
 
-❤️ Support the Project
-If you find this collection valuable and appreciate the effort involved in obtaining and sharing these insights, please consider supporting the project. Your contribution helps keep this resource updated and allows for further exploration.
+### 平台门户
 
-You can show your support via:
+![平台门户](static/images/portal-overview.svg)
 
-Cryptocurrency:
-- **EVM:** 0xeba21af63e707ce84b76a87d0ba82140048c057e  (ETH,BNB,etc)
-- **TRON:** TEfECnyz5G1EkFrUqnbFcWLVdLvAgW9Raa
-- **TON:** UQCJ7KC2zxV_zKwLahaHf9jxy0vsWRcvQFie_FUBJW-9LcEW
-- **BTC:** bc1qdag98y5yahs6wf7rsfeh4cadsjfzmn5ngpjrcf
-- **SOL:** EwXXR4VqmWSNz1sjhZ8qcQ882i4URwAwhixSPEbDzyv6
-- **SUI:** 0x76da9b74c61508fbbd0b3e1989446e036b0622f252dd8d07c3fce759b239b47d
+### 接口文档
 
+![接口文档](static/images/docs-preview.svg)
 
-🙏 Thank you for your support!
+### 账户中心
 
-A Python-based Turnstile solver using the patchright and camoufox libraries, featuring multi-threaded execution, API integration, and support for different browsers. It solves CAPTCHAs quickly and efficiently, with customizable configurations and detailed logging.
+![账户中心](static/images/account-center.svg)
 
-## 🚀 Features
+## 页面入口
 
-- **Multi-threaded execution** - Solve multiple CAPTCHAs simultaneously
-- **Multiple browser support** - Chromium, Chrome, Edge, and Camoufox
-- **Proxy support** - Use proxies from proxies.txt file
-- **Random browser configurations** - Rotate User-Agent and Sec-CH-UA headers
-- **Detailed logging** - Comprehensive debug information
-- **REST API** - Easy integration with other applications
-- **Database storage** - PostgreSQL by default, with optional SQLite fallback
-- **Automatic cleanup** - Old results are automatically cleaned up
-- **Image blocking** - Optimized performance by blocking unnecessary images
+- `/`：服务门户首页
+- `/docs`：开发者接口文档
+- `/user/login`：统一账户登录
+- `/user/center`：账户中心
+- `/admin/login`：管理员登录页
+- `/admin`：运维面板
+- `/admin/accounts`：账号管理
+- `/admin/proxies`：代理池管理
 
-## 🔧 Configuration
+## 公共接口
 
-### Browser Configurations
+### 1. 提交求解任务
 
-The solver supports various browser configurations with realistic User-Agent strings and Sec-CH-UA headers:
-
-- **Chrome** (versions 136-139)
-- **Edge** (versions 137-139)
-- **Avast** (versions 137-138)
-- **Brave** (versions 137-139)
-
-### Proxy Format
-
-Add proxies to `proxies.txt` in the following formats:
-
-```
-ip:port
-ip:port:username:password
-scheme://ip:port
-scheme://username:password@ip:port
+```http
+GET /turnstile?url=https://example.com/login&sitekey=0x4AAAAAACgP975UcSubdv3v
 ```
 
-## ❗ Disclaimers
+参数说明：
 
-I am not responsible for anything that may happen, such as API Blocking, IP ban, etc.  
-This was a quick project that was made for fun and personal use if you want to see further updates, star the repo & create an "issue" here
+- `url`：目标页面地址，必填
+- `sitekey`：Turnstile 站点 Key，必填
+- `action`：可选动作参数
+- `cdata`：可选自定义参数
 
-## ⚙️ Installation Instructions
-
-Ensure Python 3.8+ is installed on your system.
-
-### 1. Create a Python virtual environment:
-
-```bash
-python -m venv venv
-```
-
-### 2. Activate the virtual environment:
-
-**On Windows:**
-```bash
-venv\Scripts\activate
-```
-
-**On macOS/Linux:**
-```bash
-source venv/bin/activate
-```
-
-### 3. Install required dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Select the browser to install:
-
-You can choose between Chromium, Chrome, Edge or Camoufox:
-
-**To install Chromium:**
-```bash
-python -m patchright install chromium
-```
-
-**To install Chrome:**
-- **On macOS/Windows:** [Click here](https://www.google.com/chrome/)
-- **On Linux (Debian/Ubuntu-based):**
-```bash
-apt update
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-apt install -y ./google-chrome-stable_current_amd64.deb
-apt -f install -y  # Fix dependencies if needed
-rm ./google-chrome-stable_current_amd64.deb
-```
-
-**To install Edge:**
-```bash
-python -m patchright install msedge
-```
-
-**To install Camoufox:**
-```bash
-python -m camoufox fetch
-```
-
-### 5. Start testing:
-
-Run the script (Check [🔧 Command line arguments](#-command-line-arguments) for better setup):
-
-```bash
-python api_solver.py
-```
-
-### 6. Configure the database:
-
-The project now supports both `pgsql` and `sqlite`, and defaults to `pgsql`.
-
-**Start with PostgreSQL (default):**
-```bash
-python api_solver.py --db-type pgsql --db-url postgresql://postgres:postgres@127.0.0.1:5432/turnstile_solver
-```
-
-**Or use SQLite:**
-```bash
-python api_solver.py --db-type sqlite --db-path results.db
-```
-
-You can also configure PostgreSQL via environment variables:
-
-```bash
-PGSQL_HOST=127.0.0.1
-PGSQL_PORT=5432
-PGSQL_USER=postgres
-PGSQL_PASSWORD=postgres
-PGSQL_DATABASE=turnstile_solver
-```
-
-## 🔧 Command line arguments
-
-| Parameter | Default | Type | Description |
-|-----------|---------|------|-------------|
-| `--no-headless` | False | boolean | Runs the browser with GUI (disable headless mode). By default, headless mode is enabled. |
-| `--useragent` | None | string | Specifies a custom User-Agent string for the browser. (No need to set if camoufox used) |
-| `--debug` | False | boolean | Enables or disables debug mode for additional logging and troubleshooting. |
-| `--browser_type` | chromium | string | Specify the browser type for the solver. Supported options: chromium, chrome, msedge, camoufox |
-| `--thread` | 4 | integer | Sets the number of browser threads to use in multi-threaded mode. |
-| `--host` | 0.0.0.0 | string | Specifies the IP address the API solver runs on. |
-| `--port` | 6080 | integer | Sets the port the API solver listens on. |
-| `--db-type` | pgsql | string | Database backend type. Supported options: pgsql, sqlite |
-| `--db-url` | None | string | PostgreSQL connection URL |
-| `--db-path` | results.db | string | SQLite database file path when using sqlite |
-| `--proxy` | False | boolean | Select a random proxy from proxies.txt for solving captchas |
-| `--random` | False | boolean | Use random User-Agent and Sec-CH-UA configuration from pool |
-| `--browser` | None | string | Specify browser name to use (e.g., chrome, firefox) |
-| `--version` | None | string | Specify browser version to use (e.g., 139, 141) |
-
-## 📡 API Documentation
-
-### Solve turnstile
-
-```
-GET /turnstile?url=https://example.com&sitekey=0x4AAAAAAA
-```
-
-**Request Parameters:**
-
-| Parameter | Type | Description | Required |
-|-----------|------|-------------|----------|
-| `url` | string | The target URL containing the CAPTCHA. (e.g., https://example.com) | Yes |
-| `sitekey` | string | The site key for the CAPTCHA to be solved. (e.g., 0x4AAAAAAA) | Yes |
-| `action` | string | Action to trigger during CAPTCHA solving, e.g., login | No |
-| `cdata` | string | Custom data that can be used for additional CAPTCHA parameters. | No |
-
-**Response:**
-
-If the request is successfully received, the server will respond with a task_id for the CAPTCHA solving task:
+成功示例：
 
 ```json
 {
-  "task_id": "d2cbb257-9c37-4f9c-9bc7-1eaee72d96a8"
+  "taskId": "f0dbe75b-fa76-41ad-89aa-4d3a392040af"
 }
 ```
 
-### Get Result
+### 2. 查询任务结果
 
-```
+```http
 GET /result?id=f0dbe75b-fa76-41ad-89aa-4d3a392040af
 ```
 
-**Request Parameters:**
-
-| Parameter | Type | Description | Required |
-|-----------|------|-------------|----------|
-| `id` | string | The unique task ID returned from the /turnstile request. | Yes |
-
-**Response:**
-
-If the CAPTCHA is solved successfully, the server will respond with the following information:
-
-```json
-{
-  "status": "ready",
-  "value": "0.KBtT-r",
-  "elapsed_time": 7.625
-}
-```
-
-**Error Responses:**
+处理中示例：
 
 ```json
 {
@@ -236,49 +72,132 @@ If the CAPTCHA is solved successfully, the server will respond with the followin
 }
 ```
 
+成功示例：
+
 ```json
 {
-  "status": "fail",
+  "status": "ready",
+  "solution": {
+    "token": "0.xxx"
+  },
+  "elapsed_time": 7.62
+}
+```
+
+失败示例：
+
+```json
+{
+  "status": "failed",
   "value": "CAPTCHA_FAIL",
   "elapsed_time": 30.0
 }
 ```
 
+## 安装说明
 
+建议使用 Python 3.8+。
 
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Browser not found**: Make sure you've installed the required browser using the installation instructions
-2. **Permission denied**: Run with appropriate permissions or check file permissions
-3. **Port already in use**: Change the port using `--port` argument
-4. **Proxy connection failed**: Check proxy format and availability
-
-### Debug Mode
-
-Enable debug mode for detailed logging:
+### 1. 创建虚拟环境
 
 ```bash
-python api_solver.py --debug
+python -m venv .venv
 ```
 
-## 📊 Performance
+### 2. 激活环境
 
-- **Average solving time**: 5-15 seconds
-- **Success rate**: 95%+ (depending on site complexity)
-- **Memory usage**: ~50-100MB per browser thread
-- **CPU usage**: Moderate (depends on thread count)
+Windows：
 
-## 🤝 Contributing
+```bash
+.venv\Scripts\activate
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+macOS / Linux：
 
-## 📄 License
+```bash
+source .venv/bin/activate
+```
 
-This project is for educational purposes only. Use at your own risk.
+### 3. 安装依赖
 
+```bash
+pip install -r requirements.txt
+```
+
+### 4. 安装浏览器运行时
+
+Chromium：
+
+```bash
+python -m patchright install chromium
+```
+
+Edge：
+
+```bash
+python -m patchright install msedge
+```
+
+Camoufox：
+
+```bash
+python -m camoufox fetch
+```
+
+### 5. 启动服务
+
+PostgreSQL：
+
+```bash
+python api_solver.py --db-type pgsql --db-url postgresql://postgres:postgres@127.0.0.1:5432/turnstile_solver
+```
+
+SQLite：
+
+```bash
+python api_solver.py --db-type sqlite --db-path results.db
+```
+
+## 常用参数
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `--browser_type` | `chromium` | 浏览器类型 |
+| `--thread` | `4` | 浏览器线程数 |
+| `--host` | `0.0.0.0` | 监听地址 |
+| `--port` | `5072` | 服务端口 |
+| `--db-type` | `pgsql` | 数据库类型 |
+| `--db-url` | 空 | PostgreSQL 连接地址 |
+| `--db-path` | `results.db` | SQLite 文件路径 |
+| `--proxy` | `False` | 是否启用代理 |
+| `--random` | `False` | 是否启用随机浏览器配置 |
+
+## 当前内置模块
+
+- Turnstile 求解接口
+- 结果轮询接口
+- 统一账户中心
+- 管理员后台
+- 代理池管理
+- 开发者接口文档
+- 运维监控面板
+- API Key、Webhook、IP 白名单、套餐配额、账单等服务入口预留
+
+## 权限说明
+
+- 访客：可访问首页与开发者文档。
+- 普通用户：可访问账户中心，不可见管理员菜单与后台数据。
+- 管理员：可登录后台进行账号、代理池和运维管理。
+
+## 开发说明
+
+如果你继续扩展本项目，建议优先补齐以下模块：
+
+- API Key 的创建、删除、禁用与签名校验
+- 调用日志分页、筛选与导出
+- Webhook 配置与签名回调
+- 套餐、订单、充值与额度治理
+
+## 免责声明
+
+本项目仅用于学习与研究，请在合法合规的前提下使用。

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="newapi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>flexapi-captcha - 服务门户</title>
+    <style>
+        :root {
+            --bg:#070b14; --bg-soft:#0b1020; --card:rgba(12,18,31,.72); --card-strong:rgba(12,18,31,.92); --text:#f5f7ff; --muted:#a2acc6; --border:rgba(255,255,255,.08); --primary:#4f7cff; --primary-hover:#3d68e6; --secondary:#162033; --secondary-hover:#1c2940; --primary-soft:rgba(79,124,255,.14); --shadow:0 18px 48px rgba(0,0,0,.28);
+        }
+        html[data-theme='light'] { --bg:#f5f7fb; --bg-soft:#eef3fb; --card:rgba(255,255,255,.9); --card-strong:#fff; --text:#1f2d3d; --muted:#6b7280; --border:#e5eaf3; --primary:#3867f4; --primary-hover:#2e57d2; --secondary:#f3f6fc; --secondary-hover:#e8eef9; --primary-soft:rgba(56,103,244,.08); --shadow:0 18px 48px rgba(15,23,42,.1); }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { margin:0; color:var(--text); font-family:"Segoe UI","Microsoft YaHei",sans-serif; background:radial-gradient(circle at 20% 20%, rgba(107,229,234,.16), transparent 24%), radial-gradient(circle at 80% 12%, rgba(239,105,199,.18), transparent 28%), radial-gradient(circle at 50% 100%, rgba(124,92,255,.14), transparent 30%), var(--bg); }
+        a { color:inherit; text-decoration:none; }
+        .container { width:min(1240px, calc(100% - 40px)); margin:0 auto; }
+        .header { position:fixed; inset:0 0 auto 0; z-index:100; background:rgba(7,11,20,.72); border-bottom:1px solid var(--border); backdrop-filter:blur(18px); }
+        html[data-theme='light'] .header { background:rgba(255,255,255,.8); }
+        .header-inner { min-height:68px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+        .brand { font-size:20px; font-weight:700; }
+        .nav { display:flex; gap:6px; flex-wrap:wrap; }
+        .nav a { padding:9px 14px; border-radius:10px; color:var(--muted); transition:.2s ease; }
+        .nav a:hover, .nav a.active { color:var(--text); background:var(--primary-soft); }
+        .header-actions { display:flex; align-items:center; gap:10px; }
+        .theme-toggle, .btn { display:inline-flex; align-items:center; justify-content:center; padding:9px 14px; border-radius:10px; border:1px solid var(--border); background:var(--card-strong); color:var(--text); box-shadow:var(--shadow); transition:background-color .2s ease, border-color .2s ease, color .2s ease, transform .2s ease; }
+        .theme-toggle:hover, .btn:hover { transform:translateY(-1px); }
+        .btn-primary { background:var(--primary); border-color:var(--primary); color:#fff; }
+        .btn-primary:hover { background:var(--primary-hover); border-color:var(--primary-hover); }
+        .btn-secondary { background:var(--secondary); border-color:var(--border); color:var(--text); }
+        .btn-secondary:hover { background:var(--secondary-hover); }
+        .btn-ghost { background:rgba(255,255,255,.02); border-color:var(--border); color:var(--text); }
+        .btn-ghost:hover { background:var(--primary-soft); border-color:rgba(79,124,255,.28); }
+        html[data-theme='light'] .btn-ghost:hover { border-color:rgba(56,103,244,.22); }
+        .hero { padding:100px 0 34px; }
+        .hero-wrap { display:grid; grid-template-columns: 1.1fr .9fr; gap:24px; align-items:center; }
+        .hero-panel, .glass, .card { border:1px solid var(--border); background:var(--card); border-radius:28px; box-shadow:var(--shadow); backdrop-filter:blur(16px); }
+        .hero-panel { padding:34px; position:relative; overflow:hidden; }
+        .hero-panel::before { content:''; position:absolute; inset:-30% auto auto -10%; width:320px; height:320px; border-radius:50%; background:radial-gradient(circle, rgba(107,229,234,.18), transparent 70%); }
+        .hero-panel::after { content:''; position:absolute; inset:auto -10% -30% auto; width:360px; height:360px; border-radius:50%; background:radial-gradient(circle, rgba(239,105,199,.18), transparent 70%); }
+        .badge { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; color:var(--secondary); border:1px solid var(--border); background:rgba(255,255,255,.04); }
+        h1 { margin:16px 0 10px; font-size:clamp(28px, 3.5vw, 46px); line-height:1.15; max-width:520px; }
+        .hero-panel p { color:var(--muted); font-size:14px; line-height:1.85; max-width:560px; }
+        .hero-actions, .hero-meta { display:flex; gap:12px; flex-wrap:wrap; margin-top:22px; }
+        .metric, .glass, .card { padding:18px; }
+        .metric { min-width:132px; }
+        .metric .value { font-size:22px; font-weight:700; }
+        .metric .label { margin-top:8px; color:var(--muted); font-size:13px; }
+        .visual-stack { display:grid; gap:14px; }
+        .visual-stack img, .card img { width:100%; display:block; border-radius:18px; border:1px solid var(--border); }
+        .section { padding:34px 0; }
+        .section-title { margin:0 0 10px; font-size:30px; }
+        .section-desc { margin:0 0 20px; color:var(--muted); line-height:1.9; }
+        .cards-3, .cards-4 { display:grid; gap:16px; }
+        .cards-3 { grid-template-columns:repeat(3, 1fr); }
+        .cards-4 { grid-template-columns:repeat(4, 1fr); }
+        .card h3 { margin:0 0 10px; }
+        .card p { margin:0; color:var(--muted); line-height:1.8; }
+        .timeline { display:grid; gap:12px; }
+        .timeline-item { padding:16px 18px; border-radius:16px; background:var(--card); border:1px solid var(--border); }
+        .footer { padding:40px 0 52px; color:var(--muted); text-align:center; }
+        @media (max-width: 980px) { .hero-wrap, .cards-4, .cards-3 { grid-template-columns:1fr; } .nav { display:none; } }
+    </style>
+</head>
+<body>
+    <header class="header" id="siteHeader">
+        <div class="container header-inner">
+            <div style="display:flex; align-items:center; gap:18px;">
+                <a class="brand" href="/">flexapi-captcha</a>
+                <nav class="nav">
+                    <a href="#hero" class="active">首页</a>
+                    <a href="#features">能力</a>
+                    <a href="#services">服务</a>
+                    <a href="#guide">接入</a>
+                    <a href="/docs">文档</a>
+                </nav>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="theme-toggle" id="themeToggle" title="切换主题" aria-label="切换主题">◐</button>
+                <a class="btn btn-ghost" href="/docs">文档</a>
+                {% if admin_session.logged_in or user_session.logged_in %}
+                <a class="btn btn-primary" href="/user/center">控制台</a>
+                {% else %}
+                <a class="btn btn-ghost" href="/login">登录</a>
+                <a class="btn btn-primary" href="/user/register">注册</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <section class="hero" id="hero">
+        <div class="container hero-wrap">
+            <div class="hero-panel">
+                <span class="badge">人工智能应用基座</span>
+                <h1>承载 AI 应用，管理数字资产，连接未来。</h1>
+                <p>首页增加主题切换，整体风格统一为更克制的深色科技感。登录收口为统一入口，进入后按身份展示不同内容，但管理员仍保留用户侧常用服务能力。</p>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="/docs">快速开始</a>
+                    <a class="btn btn-secondary" href="https://github.com" target="_blank" rel="noreferrer">GitHub</a>
+                    {% if admin_session.logged_in or user_session.logged_in %}
+                    <a class="btn btn-ghost" href="/user/center">进入账户中心</a>
+                    {% else %}
+                    <a class="btn btn-ghost" href="/login">登录账户</a>
+                    {% endif %}
+                </div>
+                <div class="hero-meta">
+                    <div class="metric"><div class="value">API</div><div class="label">公开接入接口</div></div>
+                    <div class="metric"><div class="value">Docs</div><div class="label">公开文档与示例</div></div>
+                    <div class="metric"><div class="value">Portal</div><div class="label">统一账户与后台控制台</div></div>
+                </div>
+            </div>
+            <div class="visual-stack glass">
+                <img src="/static/images/portal-overview.svg" alt="平台概览图">
+                <img src="/static/images/docs-preview.svg" alt="接口文档图">
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="features">
+        <div class="container">
+            <h2 class="section-title">核心能力</h2>
+            <p class="section-desc">把登录、账户中心、后台模板和消息风格统一起来，避免一套系统出现两种体验。</p>
+            <div class="cards-4">
+                <div class="card"><h3>统一登录</h3><p>用户和管理员共用一个登录页，登录后自动识别身份并跳到对应区域。</p></div>
+                <div class="card"><h3>统一模板</h3><p>账户中心与管理后台共享同一套设计语言、主题系统和提示组件。</p></div>
+                <div class="card"><h3>常用服务</h3><p>API Key、Webhook、IP 白名单、账单充值、调用日志和配额视图全部落到真实页面。</p></div>
+                <div class="card"><h3>主题切换</h3><p>首页、登录页和控制台都支持主题切换，不再只有后台可切。</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="services">
+        <div class="container">
+            <h2 class="section-title">常用服务</h2>
+            <p class="section-desc">围绕真实业务场景补齐调用、日志、安全和充值能力。</p>
+            <div class="cards-4">
+                <div class="card"><h3>API Key</h3><p>创建密钥、设置 scopes、设置过期时间，并支持启用、停用和删除。</p></div>
+                <div class="card"><h3>调用日志</h3><p>直接读取任务结果表，查看任务状态、耗时和时间分布。</p></div>
+                <div class="card"><h3>Webhook</h3><p>配置异步回调地址、事件类型和签名密钥。</p></div>
+                <div class="card"><h3>账单与配额</h3><p>支持充值订单、积分变化、套餐展示和白名单安全控制。</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="guide">
+        <div class="container">
+            <h2 class="section-title">接入流程</h2>
+            <p class="section-desc">从文档到接入，只保留真正对调用方有价值的信息。</p>
+            <div class="timeline">
+                <div class="timeline-item"><strong>步骤一：</strong>阅读 `/docs` 中的公开接口说明与代码示例。</div>
+                <div class="timeline-item"><strong>步骤二：</strong>调用 `/turnstile` 提交任务并获取 `taskId`。</div>
+                <div class="timeline-item"><strong>步骤三：</strong>轮询 `/result` 获取令牌结果与耗时信息。</div>
+                <div class="timeline-item"><strong>步骤四：</strong>登录 `/login` 进入统一账户中心，管理密钥、Webhook、白名单和账单。</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="gallery">
+        <div class="container">
+            <h2 class="section-title">页面展示</h2>
+            <p class="section-desc">首页、文档和账户中心都保持同一视觉方向。</p>
+            <div class="cards-3">
+                <div class="card"><h3>平台门户</h3><img src="/static/images/portal-overview.svg" alt="平台门户图片"></div>
+                <div class="card"><h3>接口文档</h3><img src="/static/images/docs-preview.svg" alt="接口文档图片"></div>
+                <div class="card"><h3>账户中心</h3><img src="/static/images/account-center.svg" alt="账户中心图片"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">flexapi-captcha · Unified Auth · Console Style</div>
+    </footer>
+
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const themeToggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('portal-home-theme') || 'newapi';
+            root.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'newapi');
+            themeToggle?.addEventListener('click', () => {
+                const next = root.getAttribute('data-theme') === 'light' ? 'newapi' : 'light';
+                root.setAttribute('data-theme', next);
+                localStorage.setItem('portal-home-theme', next);
+            });
+            const links = [...document.querySelectorAll('.nav a[href^="#"]')];
+            const sections = links.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (!entry.isIntersecting) return;
+                    links.forEach((link) => link.classList.toggle('active', link.getAttribute('href') === `#${entry.target.id}`));
+                });
+            }, { rootMargin: '-35% 0px -55% 0px', threshold: 0 });
+            sections.forEach((section) => observer.observe(section));
+        })();
+    </script>
+</body>
+</html>

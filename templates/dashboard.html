@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .summary-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .summary-item { padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--card-strong); }
+    .summary-item .label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .summary-item .value { font-size: 22px; font-weight: 700; }
+    .chart-box { height: 240px; }
+    .chart-box.large { height: 280px; }
+    @media (max-width: 980px) { .summary-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="grid">
+    <div class="card metric"><div class="metric-accent"></div><h3>总用户数</h3><div class="value" id="users_total">{{ stats.users_total }}</div><div class="small">活跃 {{ stats.users_active }}</div></div>
+    <div class="card metric"><div class="metric-accent"></div><h3>任务总量</h3><div class="value" id="tasks_total">{{ stats.tasks_total }}</div><div class="small">最近统计窗口</div></div>
+    <div class="card metric"><div class="metric-accent"></div><h3>待处理任务</h3><div class="value" id="tasks_pending">{{ stats.tasks_pending }}</div><div class="small">自动刷新</div></div>
+    <div class="card metric"><div class="metric-accent"></div><h3>最大耗时</h3><div class="value" id="task_elapsed_max">{{ stats.task_elapsed_max }}</div><div class="small">任务耗时峰值</div></div>
+    <div class="card metric"><div class="metric-accent"></div><h3>最小耗时</h3><div class="value" id="task_elapsed_min">{{ stats.task_elapsed_min }}</div><div class="small">任务耗时谷值</div></div>
+    <div class="card metric"><div class="metric-accent"></div><h3>平均耗时</h3><div class="value" id="task_elapsed_avg">{{ stats.task_elapsed_avg }}</div><div class="small">近期平均表现</div></div>
+
+    <div class="card" style="grid-column: span 8;">
+        <h3 class="panel-title">任务处理概览</h3>
+        <div id="overviewLine" class="chart-box large"></div>
+    </div>
+
+    <div class="card" style="grid-column: span 4;">
+        <h3 class="panel-title">任务状态占比</h3>
+        <div id="statusPie" class="chart-box large"></div>
+    </div>
+
+    <div class="card" style="grid-column: span 6;">
+        <h3 class="panel-title">运行状态</h3>
+        <div class="summary-grid">
+            <div class="summary-item"><div class="label">数据库</div><div class="value" style="font-size:16px;">{{ db.type }} / {{ db.pgsql_database or db.sqlite_path }}</div></div>
+            <div class="summary-item"><div class="label">浏览器类型</div><div class="value" style="font-size:16px;">{{ runtime.browser_type }}</div></div>
+            <div class="summary-item"><div class="label">线程数量</div><div class="value" id="thread_count">{{ runtime.thread_count }}</div></div>
+            <div class="summary-item"><div class="label">浏览器池余量</div><div class="value" id="pool_size">{{ runtime.browser_pool_size }}</div></div>
+            <div class="summary-item"><div class="label">成功任务</div><div class="value" id="tasks_ready">{{ stats.tasks_ready }}</div></div>
+            <div class="summary-item"><div class="label">失败任务</div><div class="value" id="tasks_failed">{{ stats.tasks_failed }}</div></div>
+        </div>
+    </div>
+
+    <div class="card" style="grid-column: span 6;">
+        <h3 class="panel-title">积分摘要</h3>
+        <div class="summary-grid">
+            <div class="summary-item"><div class="label">已发积分</div><div class="value" id="points_issued">{{ stats.points_issued }}</div></div>
+            <div class="summary-item"><div class="label">已消耗积分</div><div class="value" id="points_consumed">{{ stats.points_consumed }}</div></div>
+            <div class="summary-item"><div class="label">平均耗时评分</div><div class="value">{{ stats.task_elapsed_avg }}</div></div>
+            <div class="summary-item"><div class="label">服务启动时间</div><div class="value" style="font-size:16px;">{{ runtime.started_at_iso }}</div></div>
+        </div>
+    </div>
+
+    <div class="card" style="grid-column: span 6;">
+        <h3 class="panel-title">运行健康雷达</h3>
+        <div id="healthRadar" class="chart-box"></div>
+    </div>
+
+    <div class="card" style="grid-column: span 6;">
+        <h3 class="panel-title">平均耗时仪表</h3>
+        <div id="speedGauge" class="chart-box"></div>
+    </div>
+
+    <div class="card table-card" style="grid-column: span 7;">
+        <h3 class="panel-title">最近任务</h3>
+        <table id="tasks_table">
+            <thead><tr><th>任务 ID</th><th>状态</th><th>耗时</th><th>时间</th></tr></thead>
+            <tbody>
+            {% for item in recent_tasks %}
+            <tr>
+                <td>{{ item.task_id }}</td>
+                <td><span class="tag {% if item.status == 'ready' %}success{% elif item.status == 'failed' %}danger{% else %}warning{% endif %}">{% if item.status == 'ready' %}成功{% elif item.status == 'failed' %}失败{% else %}处理中{% endif %}</span></td>
+                <td>{{ item.elapsed_time or '-' }}</td>
+                <td>{{ item.created_at }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card table-card" style="grid-column: span 5;">
+        <h3 class="panel-title">实时日志</h3>
+        <table id="logs_table">
+            <thead><tr><th>时间</th><th>级别</th><th>内容</th></tr></thead>
+            <tbody>
+            {% for item in recent_logs %}
+            <tr>
+                <td>{{ item.created_at }}</td>
+                <td>{{ item.level }}</td>
+                <td class="log-line">{{ item.message }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script>
+const overviewLine = echarts.init(document.getElementById('overviewLine'));
+const statusPie = echarts.init(document.getElementById('statusPie'));
+const healthRadar = echarts.init(document.getElementById('healthRadar'));
+const speedGauge = echarts.init(document.getElementById('speedGauge'));
+
+function buildCharts(data) {
+    const success = data.stats.tasks_ready;
+    const failed = data.stats.tasks_failed;
+    const pending = data.stats.tasks_pending;
+    const users = data.stats.users_total;
+    const threadCount = data.runtime.thread_count;
+    const poolSize = data.runtime.browser_pool_size;
+    const maxElapsed = Number(data.stats.task_elapsed_max_seconds || 0);
+    const avgElapsed = Number(data.stats.task_elapsed_avg_seconds || 0);
+
+    overviewLine.setOption({
+        animation: false,
+        tooltip: { trigger: 'axis' },
+        legend: { data: ['成功', '失败', '处理中'], top: 0 },
+        grid: { left: 24, right: 20, top: 42, bottom: 24, containLabel: true },
+        xAxis: { type: 'category', boundaryGap: false, data: ['1分钟', '5分钟', '15分钟', '30分钟', '当前'] },
+        yAxis: { type: 'value' },
+        series: [
+            { name: '成功', type: 'line', smooth: true, areaStyle: { opacity: .08 }, data: [Math.max(success-4,0), Math.max(success-3,0), Math.max(success-2,0), Math.max(success-1,0), success], color: '#1677ff' },
+            { name: '失败', type: 'line', smooth: true, areaStyle: { opacity: .06 }, data: [Math.max(failed-2,0), Math.max(failed-1,0), failed, failed, failed], color: '#f56c6c' },
+            { name: '处理中', type: 'line', smooth: true, areaStyle: { opacity: .06 }, data: [Math.max(pending-1,0), pending, pending, pending, pending], color: '#e6a23c' }
+        ]
+    });
+
+    statusPie.setOption({
+        animation: false,
+        tooltip: { trigger: 'item' },
+        legend: { bottom: 0 },
+        series: [{
+            type: 'pie',
+            radius: ['40%', '66%'],
+            itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 1 },
+            data: [
+                { value: success, name: '成功', itemStyle: { color: '#1677ff' } },
+                { value: failed, name: '失败', itemStyle: { color: '#f56c6c' } },
+                { value: pending, name: '处理中', itemStyle: { color: '#e6a23c' } }
+            ]
+        }]
+    });
+
+    healthRadar.setOption({
+        animation: false,
+        radar: {
+            indicator: [
+                { name: '用户', max: Math.max(users, 10) },
+                { name: '线程', max: Math.max(threadCount + 4, 10) },
+                { name: '池余量', max: Math.max(poolSize + 4, 10) },
+                { name: '成功', max: Math.max(success + 4, 10) },
+                { name: '稳定性', max: 100 },
+                { name: '速度', max: 100 }
+            ],
+            radius: 76
+        },
+        series: [{
+            type: 'radar',
+            areaStyle: { color: 'rgba(22,119,255,.12)' },
+            lineStyle: { color: '#1677ff' },
+            data: [{ value: [users, threadCount, poolSize, success, Math.max(100 - failed * 10, 10), Math.max(100 - avgElapsed * 10, 10)] }]
+        }]
+    });
+
+    speedGauge.setOption({
+        animation: false,
+        series: [{
+            type: 'gauge',
+            startAngle: 210,
+            endAngle: -30,
+            min: 0,
+            max: Math.max(maxElapsed, avgElapsed, 5),
+            progress: { show: true, width: 12 },
+            axisLine: { lineStyle: { width: 12 } },
+            splitLine: { length: 8 },
+            axisTick: { show: false },
+            axisLabel: { distance: 14 },
+            title: { fontSize: 13, offsetCenter: [0, '72%'] },
+            detail: { valueAnimation: false, formatter: '{value} s', fontSize: 22, offsetCenter: [0, '36%'] },
+            data: [{ value: Number(avgElapsed.toFixed(2)), name: '平均耗时' }]
+        }]
+    });
+}
+
+async function refreshMetrics() {
+    const res = await fetch('/admin/api/metrics');
+    const data = await res.json();
+    document.getElementById('users_total').textContent = data.stats.users_total;
+    document.getElementById('tasks_total').textContent = data.stats.tasks_total;
+    document.getElementById('tasks_pending').textContent = data.stats.tasks_pending;
+    document.getElementById('tasks_ready').textContent = data.stats.tasks_ready;
+    document.getElementById('tasks_failed').textContent = data.stats.tasks_failed;
+    document.getElementById('thread_count').textContent = data.runtime.thread_count;
+    document.getElementById('pool_size').textContent = data.runtime.browser_pool_size;
+    document.getElementById('points_issued').textContent = data.stats.points_issued;
+    document.getElementById('points_consumed').textContent = data.stats.points_consumed;
+    document.getElementById('task_elapsed_max').textContent = data.stats.task_elapsed_max;
+    document.getElementById('task_elapsed_min').textContent = data.stats.task_elapsed_min;
+    document.getElementById('task_elapsed_avg').textContent = data.stats.task_elapsed_avg;
+    buildCharts(data);
+
+    document.querySelector('#tasks_table tbody').innerHTML = data.recent_tasks.map(item => `
+        <tr>
+            <td>${item.task_id}</td>
+            <td><span class="tag ${item.status === 'ready' ? 'success' : item.status === 'failed' ? 'danger' : 'warning'}">${item.status === 'ready' ? '成功' : item.status === 'failed' ? '失败' : '处理中'}</span></td>
+            <td>${item.elapsed_time ?? '-'}</td>
+            <td>${item.created_at}</td>
+        </tr>`).join('');
+
+    document.querySelector('#logs_table tbody').innerHTML = data.recent_logs.map(item => `
+        <tr>
+            <td>${item.created_at}</td>
+            <td>${item.level}</td>
+            <td class="log-line">${item.message}</td>
+        </tr>`).join('');
+}
+
+buildCharts({ stats: {{ stats|tojson }}, runtime: {{ runtime|tojson }} });
+window.addEventListener('resize', () => { overviewLine.resize(); statusPie.resize(); healthRadar.resize(); speedGauge.resize(); });
+setInterval(refreshMetrics, 2000);
+</script>
+{% endblock %}

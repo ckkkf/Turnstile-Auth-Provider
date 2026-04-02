@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录 - Turnstile Auth Provider</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #08101f;
+            --card: rgba(15, 23, 42, 0.92);
+            --border: rgba(255,255,255,0.08);
+            --text: #edf2ff;
+            --muted: #9aa6c4;
+            --primary: #60a5fa;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: radial-gradient(circle at top, #132347 0%, #08101f 55%, #050914 100%);
+            color: var(--text);
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+        }
+        .wrap { width: min(1080px, 94vw); display: grid; grid-template-columns: 1.1fr 0.9fr; border: 1px solid var(--border); border-radius: 24px; overflow: hidden; background: var(--card); box-shadow: 0 24px 80px rgba(0,0,0,0.35); }
+        .hero { padding: 48px; background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(37,99,235,0.05)); }
+        .hero h1 { font-size: 40px; margin: 0 0 16px; }
+        .hero p { color: var(--muted); line-height: 1.7; }
+        .hero ul { color: var(--muted); line-height: 1.9; padding-left: 18px; }
+        .form { padding: 48px; }
+        .tag { display: inline-block; padding: 8px 12px; border-radius: 999px; background: rgba(96,165,250,0.12); color: #93c5fd; margin-bottom: 14px; font-size: 13px; }
+        h2 { margin: 0 0 12px; font-size: 28px; }
+        .msg { margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; background: rgba(96,165,250,0.1); color: #bfdbfe; border: 1px solid rgba(96,165,250,0.18); }
+        .toast-stack { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 280px; max-width: 420px; display: flex; gap: 10px; padding: 14px 16px; border-radius: 14px; background: rgba(15, 23, 42, 0.96); border: 1px solid var(--border); box-shadow: 0 18px 46px rgba(0,0,0,.26); }
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #ef4444; }
+        .toast-close { margin-left: auto; background: transparent; border: none; color: var(--muted); padding: 0; width: auto; }
+        input, button { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text); font: inherit; margin-top: 12px; }
+        button { background: #4f7cff; border: none; cursor: pointer; font-weight: 600; }
+        button:hover { background: #3d68e6; }
+        .muted { margin-top: 16px; color: var(--muted); font-size: 14px; }
+        a { color: #93c5fd; text-decoration: none; }
+        @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } .hero, .form { padding: 28px; } }
+    </style>
+</head>
+<body>
+    <div class="toast-stack" id="toastStack"></div>
+    <div class="wrap">
+        <section class="hero">
+            <div class="tag">Admin Portal</div>
+            <h1>管理员独立登录页</h1>
+            <p>这里是后台管理的独立认证入口，不再和用户页面、后台导航混在一起。登录成功后才可进入运维面板、用户管理与管理员治理界面。</p>
+            <ul>
+                <li>受保护页面：`/admin`、`/admin/users`、`/admin/admins`</li>
+                <li>支持会话保持与退出登录</li>
+                <li>建议首次登录后立即修改默认管理员密码</li>
+            </ul>
+        </section>
+        <section class="form">
+            <div class="tag">管理员认证</div>
+            <h2>登录后台</h2>
+            <form method="post">
+                <input name="username" placeholder="管理员账号" required>
+                <input name="password" type="password" placeholder="管理员密码" required>
+                <button type="submit">进入后台</button>
+            </form>
+            <div class="muted">默认账号：`admin` / 默认密码：`admin123456`</div>
+            <div class="muted"><a href="/">返回首页</a></div>
+        </section>
+    </div>
+    <script>
+        (function () {
+            const message = {{ (message or '')|tojson }};
+            if (!message) return;
+            const stack = document.getElementById('toastStack');
+            const toast = document.createElement('div');
+            const type = /错误|失败|不能为空/.test(message) ? 'error' : 'success';
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<div>${type === 'error' ? '✖' : '✔'}</div><div style="line-height:1.6;">${message}</div><button class="toast-close" type="button">×</button>`;
+            toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+            stack.appendChild(toast);
+            setTimeout(() => toast.remove(), 3600);
+        })();
+    </script>
+</body>
+</html>

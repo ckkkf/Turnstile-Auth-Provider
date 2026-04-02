@@ -1,0 +1,13 @@
+{
+  "active_pool_id": "default-pool",
+  "pools": [
+    {
+      "id": "default-pool",
+      "name": "默认代理池",
+      "strategy": "round_robin",
+      "enabled": true,
+      "proxies": [],
+      "cursor": 0
+    }
+  ]
+}

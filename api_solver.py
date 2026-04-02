@@ -10,7 +10,7 @@ import argparse
 from quart import Quart, request, jsonify
 from camoufox.async_api import AsyncCamoufox
 from patchright.async_api import async_playwright
-from db_results import init_db, save_result, load_result, cleanup_old_results
+from db_results import configure_database, init_db, save_result, load_result, cleanup_old_results
 from browser_configs import browser_config
 from rich.console import Console
 from rich.panel import Panel
@@ -923,6 +923,9 @@ def parse_args():
     parser.add_argument('--version', type=str, help='Specify browser version to use (e.g., 139, 141)')
     parser.add_argument('--host', type=str, default='0.0.0.0', help='Specify the IP address where the API solver runs. (Default: 127.0.0.1)')
     parser.add_argument('--port', type=str, default='5072', help='Set the port for the API solver to listen on. (Default: 5072)')
+    parser.add_argument('--db-type', type=str, default='pgsql', choices=['pgsql', 'postgres', 'postgresql', 'sqlite'], help='Database backend type. Supported options: pgsql, sqlite (default: pgsql)')
+    parser.add_argument('--db-url', type=str, help='PostgreSQL connection URL, e.g. postgresql://user:password@127.0.0.1:5432/turnstile_solver')
+    parser.add_argument('--db-path', type=str, default='results.db', help='SQLite database file path when using sqlite (default: results.db)')
     return parser.parse_args()
 
 
@@ -933,6 +936,7 @@ def create_app(headless: bool, useragent: str, debug: bool, browser_type: str, t
 
 if __name__ == '__main__':
     args = parse_args()
+    configure_database(db_type=args.db_type, db_path=args.db_path, db_url=args.db_url)
     browser_types = [
         'chromium',
         'chrome',

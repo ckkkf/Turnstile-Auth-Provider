@@ -5,4 +5,5 @@ patchright
 camoufox[geoip]
 requests
 aiosqlite
+asyncpg
 rich

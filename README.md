@@ -37,7 +37,7 @@ A Python-based Turnstile solver using the patchright and camoufox libraries, fea
 - **Random browser configurations** - Rotate User-Agent and Sec-CH-UA headers
 - **Detailed logging** - Comprehensive debug information
 - **REST API** - Easy integration with other applications
-- **Database storage** - SQLite database for result persistence
+- **Database storage** - PostgreSQL by default, with optional SQLite fallback
 - **Automatic cleanup** - Old results are automatically cleaned up
 - **Image blocking** - Optimized performance by blocking unnecessary images
 
@@ -134,6 +134,30 @@ Run the script (Check [🔧 Command line arguments](#-command-line-arguments) fo
 python api_solver.py
 ```
 
+### 6. Configure the database:
+
+The project now supports both `pgsql` and `sqlite`, and defaults to `pgsql`.
+
+**Start with PostgreSQL (default):**
+```bash
+python api_solver.py --db-type pgsql --db-url postgresql://postgres:postgres@127.0.0.1:5432/turnstile_solver
+```
+
+**Or use SQLite:**
+```bash
+python api_solver.py --db-type sqlite --db-path results.db
+```
+
+You can also configure PostgreSQL via environment variables:
+
+```bash
+PGSQL_HOST=127.0.0.1
+PGSQL_PORT=5432
+PGSQL_USER=postgres
+PGSQL_PASSWORD=postgres
+PGSQL_DATABASE=turnstile_solver
+```
+
 ## 🔧 Command line arguments
 
 | Parameter | Default | Type | Description |
@@ -145,6 +169,9 @@ python api_solver.py
 | `--thread` | 4 | integer | Sets the number of browser threads to use in multi-threaded mode. |
 | `--host` | 0.0.0.0 | string | Specifies the IP address the API solver runs on. |
 | `--port` | 6080 | integer | Sets the port the API solver listens on. |
+| `--db-type` | pgsql | string | Database backend type. Supported options: pgsql, sqlite |
+| `--db-url` | None | string | PostgreSQL connection URL |
+| `--db-path` | results.db | string | SQLite database file path when using sqlite |
 | `--proxy` | False | boolean | Select a random proxy from proxies.txt for solving captchas |
 | `--random` | False | boolean | Use random User-Agent and Sec-CH-UA configuration from pool |
 | `--browser` | None | string | Specify browser name to use (e.g., chrome, firefox) |

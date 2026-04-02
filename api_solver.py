@@ -12,7 +12,7 @@ import argparse
 from quart import Quart, request, jsonify, render_template, session
 from camoufox.async_api import AsyncCamoufox
 from patchright.async_api import async_playwright
-from db_results import configure_database, get_database_config, init_db, save_result, load_result, cleanup_old_results
+from db_results import cleanup_old_results, configure_database, get_database_config, get_result_record, get_service_api_key_by_token, init_db, load_result, save_result, touch_service_api_key_usage
 from browser_configs import browser_config
 from portal_ui import ManagementPortal
 from proxy_pool import ensure_default_proxy_pool, select_proxy
@@ -184,6 +184,23 @@ class TurnstileAPIServer:
         self.app.route('/turnstile', methods=['GET'])(self.process_turnstile)
         self.app.route('/result', methods=['GET'])(self.get_result)
         self.app.route('/')(self.index)
+
+    @staticmethod
+    def _extract_access_token() -> Optional[str]:
+        auth_header = (request.headers.get('Authorization') or '').strip()
+        if auth_header.lower().startswith('bearer '):
+            return auth_header[7:].strip() or None
+        return (request.headers.get('X-API-Key') or request.args.get('api_key') or '').strip() or None
+
+    async def _require_api_key(self):
+        access_token = self._extract_access_token()
+        if not access_token:
+            return None
+        api_key = await get_service_api_key_by_token(access_token)
+        if not api_key or api_key.get('status') != 'active':
+            return None
+        await touch_service_api_key_usage(api_key['id'])
+        return api_key
         
 
     async def _startup(self) -> None:
@@ -826,6 +843,17 @@ class TurnstileAPIServer:
                 "errorDescription": "Both 'url' and 'sitekey' are required"
             }), 200
 
+        api_key = await self._require_api_key()
+        if not api_key:
+            return jsonify({
+                "errorId": 1,
+                "errorCode": "ERROR_KEY_DENIED",
+                "errorDescription": "A valid API key is required"
+            }), 403
+
+        owner_id = api_key.get('owner_id')
+        owner_kind = api_key.get('owner_kind')
+        api_key_id = api_key.get('id')
         task_id = str(uuid.uuid4())
         await save_result(task_id, "turnstile", {
             "status": "CAPTCHA_NOT_READY",
@@ -834,7 +862,7 @@ class TurnstileAPIServer:
             "sitekey": sitekey,
             "action": action,
             "cdata": cdata
-        })
+        }, owner_id=owner_id, owner_kind=owner_kind, api_key_id=api_key_id)
 
         try:
             asyncio.create_task(self._solve_turnstile(task_id=task_id, url=url, sitekey=sitekey, action=action, cdata=cdata))
@@ -856,6 +884,14 @@ class TurnstileAPIServer:
     async def get_result(self):
         """Return solved data"""
         task_id = request.args.get('id')
+        api_key = await self._require_api_key()
+
+        if not api_key:
+            return jsonify({
+                "errorId": 1,
+                "errorCode": "ERROR_KEY_DENIED",
+                "errorDescription": "A valid API key is required"
+            }), 403
 
         if not task_id:
             return jsonify({
@@ -864,13 +900,24 @@ class TurnstileAPIServer:
                 "errorDescription": "Invalid task ID/Request parameter"
             }), 200
 
-        result = await load_result(task_id)
-        if not result:
+        result_record = await get_result_record(task_id)
+        if not result_record:
             return jsonify({
                 "errorId": 1,
                 "errorCode": "ERROR_CAPTCHA_UNSOLVABLE",
                 "errorDescription": "Task not found"
             }), 200
+
+        is_admin_key = api_key.get('owner_kind') == 'admin'
+        if not is_admin_key:
+            if result_record.get('owner_id') != api_key.get('owner_id') or result_record.get('owner_kind') != api_key.get('owner_kind'):
+                return jsonify({
+                    "errorId": 1,
+                    "errorCode": "ERROR_KEY_DENIED",
+                    "errorDescription": "This task does not belong to the current API key"
+                }), 403
+
+        result = await load_result(task_id)
 
         if result == "CAPTCHA_NOT_READY" or (isinstance(result, dict) and result.get("status") == "CAPTCHA_NOT_READY"):
             return jsonify({"status": "processing"}), 200

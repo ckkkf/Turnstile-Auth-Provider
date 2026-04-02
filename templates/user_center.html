@@ -1,5 +1,10 @@
 ﻿{% extends 'base.html' %}
 {% block content %}
+<style>
+    .result-summary { max-width: 280px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+    .api-key-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .api-key-value { flex: 1; min-width: 0; font-family: Consolas, monospace; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
 <div class="grid">
     {% if user_section == 'overview' %}
     <div class="card" style="grid-column: span 8;">
@@ -25,17 +30,19 @@
     <div class="card table-card">
         <h3 class="panel-title">最近调用</h3>
         <table>
-            <thead><tr><th>任务 ID</th><th>状态</th><th>耗时</th><th>时间</th></tr></thead>
+            <thead><tr><th>任务 ID</th><th>状态</th><th>结果摘要</th><th>耗时</th><th>时间</th><th>操作</th></tr></thead>
             <tbody>
             {% for item in recent_tasks %}
                 <tr>
                     <td class="token">{{ item.task_id }}</td>
                     <td><span class="tag {% if item.status == 'ready' %}success{% elif item.status == 'failed' %}danger{% else %}warning{% endif %}">{{ item.status }}</span></td>
+                    <td><span class="result-summary" title="{{ item.result_text }}">{{ item.result_text }}</span></td>
                     <td>{{ item.elapsed_time or '-' }}</td>
                     <td>{{ item.created_at }}</td>
+                    <td><button type="button" class="btn" onclick='openTaskResult({{ item|tojson|safe }})'>查看结果</button></td>
                 </tr>
             {% else %}
-                <tr><td colspan="4" class="empty-tip">暂无调用日志</td></tr>
+                <tr><td colspan="6" class="empty-tip">暂无调用日志</td></tr>
             {% endfor %}
             </tbody>
         </table>
@@ -65,7 +72,13 @@
             {% for item in service_api_keys %}
                 <tr>
                     <td>{{ item.name }}</td>
-                    <td class="token">{{ item.token }}</td>
+                    <td>
+                        <div class="api-key-cell">
+                            <span class="api-key-value token" id="apiKeyToken_{{ item.id }}" data-token="{{ item.token }}">••••••••••••••••••••</span>
+                            <button type="button" class="btn" data-visible="false" onclick="toggleApiKeyToken('{{ item.id }}', this)">显示</button>
+                            <button type="button" class="btn" onclick="copyApiKeyToken('{{ item.id }}')">复制</button>
+                        </div>
+                    </td>
                     <td>{{ item.scopes }}</td>
                     <td><span class="tag {% if item.status == 'active' %}success{% else %}danger{% endif %}">{{ item.status }}</span></td>
                     <td>{{ item.expires_at or '-' }}</td>
@@ -184,18 +197,21 @@
     {% if user_section == 'logs' %}
     <div class="card table-card">
         <h3 class="panel-title">调用日志</h3>
+        <p class="small">这里仅展示带登录态或 API Key 归属的调用记录，你可以直接查看每次求解后的结果详情。</p>
         <table>
-            <thead><tr><th>任务 ID</th><th>状态</th><th>耗时</th><th>时间</th></tr></thead>
+            <thead><tr><th>任务 ID</th><th>状态</th><th>结果摘要</th><th>耗时</th><th>时间</th><th>操作</th></tr></thead>
             <tbody>
             {% for item in recent_tasks %}
                 <tr>
                     <td class="token">{{ item.task_id }}</td>
                     <td><span class="tag {% if item.status == 'ready' %}success{% elif item.status == 'failed' %}danger{% else %}warning{% endif %}">{{ item.status }}</span></td>
+                    <td><span class="result-summary" title="{{ item.result_text }}">{{ item.result_text }}</span></td>
                     <td>{{ item.elapsed_time or '-' }}</td>
                     <td>{{ item.created_at }}</td>
+                    <td><button type="button" class="btn" onclick='openTaskResult({{ item|tojson|safe }})'>查看结果</button></td>
                 </tr>
             {% else %}
-                <tr><td colspan="4" class="empty-tip">暂无调用日志</td></tr>
+                <tr><td colspan="6" class="empty-tip">暂无调用日志</td></tr>
             {% endfor %}
             </tbody>
         </table>
@@ -259,6 +275,63 @@
     </div>
     {% endif %}
 </div>
+
+<div class="modal-mask" id="taskResultMask">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="panel-title" style="margin:0;">调用结果详情</h3>
+            <button type="button" class="modal-close" onclick="closeModal('taskResultMask')">×</button>
+        </div>
+        <div class="small" id="taskResultMeta" style="margin-bottom:12px;"></div>
+        <pre class="log-line" id="taskResultContent" style="margin:0; max-height:420px; overflow:auto;"></pre>
+    </div>
+</div>
+
+<script>
+function openMask(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('show');
+}
+
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+}
+
+function openTaskResult(item) {
+    document.getElementById('taskResultMeta').textContent = `任务 ID：${item.task_id || '-'} ｜ 状态：${item.status || '-'} ｜ 耗时：${item.elapsed_time || '-'}`;
+    document.getElementById('taskResultContent').textContent = item.result_json || item.result_text || '-';
+    openMask('taskResultMask');
+}
+
+function toggleApiKeyToken(keyId, button) {
+    const el = document.getElementById(`apiKeyToken_${keyId}`);
+    if (!el) return;
+    const visible = button.getAttribute('data-visible') === 'true';
+    if (visible) {
+        el.textContent = '••••••••••••••••••••';
+        button.textContent = '显示';
+        button.setAttribute('data-visible', 'false');
+        return;
+    }
+    el.textContent = el.getAttribute('data-token') || '-';
+    button.textContent = '隐藏';
+    button.setAttribute('data-visible', 'true');
+}
+
+async function copyApiKeyToken(keyId) {
+    const el = document.getElementById(`apiKeyToken_${keyId}`);
+    if (!el) return;
+    const token = el.getAttribute('data-token') || '';
+    if (!token) return;
+    try {
+        await navigator.clipboard.writeText(token);
+        if (window.showToast) window.showToast('API Key 已复制', 'success', '复制成功');
+    } catch (error) {
+        if (window.showToast) window.showToast('复制失败，请手动复制', 'error', '复制失败');
+    }
+}
+</script>
 
 <div class="modal-mask" id="apiKeyEditMask">
     <div class="modal">

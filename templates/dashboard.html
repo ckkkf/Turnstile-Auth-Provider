@@ -5,9 +5,18 @@
     .summary-item { padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--card-strong); }
     .summary-item .label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
     .summary-item .value { font-size: 22px; font-weight: 700; }
+    .summary-item .value.compact { font-size: 15px; line-height: 1.45; word-break: break-all; }
     .chart-box { height: 240px; }
     .chart-box.large { height: 280px; }
+    .ops-row { grid-column: span 12; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .ops-row .card { min-width: 0; }
+    .ops-row .chart-box { height: 210px; }
+    .ops-row .summary-grid { gap: 10px; }
+    .ops-row .summary-item { padding: 14px; }
+    .ops-row .summary-item .value { font-size: 18px; }
+    @media (max-width: 1280px) { .ops-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 980px) { .summary-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 820px) { .ops-row { grid-template-columns: 1fr; } }
 </style>
 
 <div class="grid">
@@ -28,36 +37,38 @@
         <div id="statusPie" class="chart-box large"></div>
     </div>
 
-    <div class="card" style="grid-column: span 6;">
-        <h3 class="panel-title">运行状态</h3>
-        <div class="summary-grid">
-            <div class="summary-item"><div class="label">数据库</div><div class="value" style="font-size:16px;">{{ db.type }} / {{ db.pgsql_database or db.sqlite_path }}</div></div>
-            <div class="summary-item"><div class="label">浏览器类型</div><div class="value" style="font-size:16px;">{{ runtime.browser_type }}</div></div>
-            <div class="summary-item"><div class="label">线程数量</div><div class="value" id="thread_count">{{ runtime.thread_count }}</div></div>
-            <div class="summary-item"><div class="label">浏览器池余量</div><div class="value" id="pool_size">{{ runtime.browser_pool_size }}</div></div>
-            <div class="summary-item"><div class="label">成功任务</div><div class="value" id="tasks_ready">{{ stats.tasks_ready }}</div></div>
-            <div class="summary-item"><div class="label">失败任务</div><div class="value" id="tasks_failed">{{ stats.tasks_failed }}</div></div>
+    <div class="ops-row">
+        <div class="card">
+            <h3 class="panel-title">运行健康雷达</h3>
+            <div id="healthRadar" class="chart-box"></div>
         </div>
-    </div>
 
-    <div class="card" style="grid-column: span 6;">
-        <h3 class="panel-title">积分摘要</h3>
-        <div class="summary-grid">
-            <div class="summary-item"><div class="label">已发积分</div><div class="value" id="points_issued">{{ stats.points_issued }}</div></div>
-            <div class="summary-item"><div class="label">已消耗积分</div><div class="value" id="points_consumed">{{ stats.points_consumed }}</div></div>
-            <div class="summary-item"><div class="label">平均耗时评分</div><div class="value">{{ stats.task_elapsed_avg }}</div></div>
-            <div class="summary-item"><div class="label">服务启动时间</div><div class="value" style="font-size:16px;">{{ runtime.started_at_iso }}</div></div>
+        <div class="card">
+            <h3 class="panel-title">平均耗时仪表</h3>
+            <div id="speedGauge" class="chart-box"></div>
         </div>
-    </div>
 
-    <div class="card" style="grid-column: span 6;">
-        <h3 class="panel-title">运行健康雷达</h3>
-        <div id="healthRadar" class="chart-box"></div>
-    </div>
+        <div class="card">
+            <h3 class="panel-title">运行状态</h3>
+            <div class="summary-grid">
+                <div class="summary-item"><div class="label">数据库</div><div class="value compact">{{ db.type }} / {{ db.pgsql_database or db.sqlite_path }}</div></div>
+                <div class="summary-item"><div class="label">浏览器类型</div><div class="value compact">{{ runtime.browser_type }}</div></div>
+                <div class="summary-item"><div class="label">线程数量</div><div class="value" id="thread_count">{{ runtime.thread_count }}</div></div>
+                <div class="summary-item"><div class="label">浏览器池余量</div><div class="value" id="pool_size">{{ runtime.browser_pool_size }}</div></div>
+                <div class="summary-item"><div class="label">成功任务</div><div class="value" id="tasks_ready">{{ stats.tasks_ready }}</div></div>
+                <div class="summary-item"><div class="label">失败任务</div><div class="value" id="tasks_failed">{{ stats.tasks_failed }}</div></div>
+            </div>
+        </div>
 
-    <div class="card" style="grid-column: span 6;">
-        <h3 class="panel-title">平均耗时仪表</h3>
-        <div id="speedGauge" class="chart-box"></div>
+        <div class="card">
+            <h3 class="panel-title">积分摘要</h3>
+            <div class="summary-grid">
+                <div class="summary-item"><div class="label">已发积分</div><div class="value" id="points_issued">{{ stats.points_issued }}</div></div>
+                <div class="summary-item"><div class="label">已消耗积分</div><div class="value" id="points_consumed">{{ stats.points_consumed }}</div></div>
+                <div class="summary-item"><div class="label">平均耗时评分</div><div class="value">{{ stats.task_elapsed_avg }}</div></div>
+                <div class="summary-item"><div class="label">服务启动时间</div><div class="value compact">{{ runtime.started_at_iso }}</div></div>
+            </div>
+        </div>
     </div>
 
     <div class="card table-card" style="grid-column: span 7;">

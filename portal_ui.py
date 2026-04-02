@@ -24,6 +24,7 @@ from db_results import (
     list_portal_admins,
     list_portal_users,
     list_recent_results,
+    list_recent_results_for_owner,
     list_service_api_keys,
     list_service_billing_orders,
     list_service_ip_whitelist,
@@ -341,7 +342,12 @@ class ManagementPortal:
             point_logs = [item for item in await list_points_transactions(limit=50) if item.get("user_id") == session.get("user_id")]
         context["current_user"] = current_account
         context["point_logs"] = point_logs
-        context["recent_tasks"] = await list_recent_results(limit=10)
+        owner_id = session.get("user_id")
+        owner_kind = session.get("user_kind", "user")
+        if owner_kind == "admin":
+            context["recent_tasks"] = await list_recent_results(limit=20)
+        else:
+            context["recent_tasks"] = await list_recent_results_for_owner(owner_id, owner_kind, limit=20)
         context["service_api_keys"] = await list_service_api_keys(session.get("user_id"), session.get("user_kind", "user"))
         context["service_webhooks"] = await list_service_webhooks(session.get("user_id"), session.get("user_kind", "user"))
         context["service_ip_whitelist"] = await list_service_ip_whitelist(session.get("user_id"), session.get("user_kind", "user"))

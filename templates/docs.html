@@ -67,6 +67,7 @@
         <section class="card doc-section" id="create-task">
             <h3 class="panel-title">提交求解任务</h3>
             <p class="small"><span class="endpoint"><span class="method">GET</span><span class="path">/turnstile?url=https://example.com&sitekey=0x4AAAA</span></span></p>
+            <p class="small">`/turnstile` 与 `/result` 现在都必须携带 API Key；支持 <code>Authorization: Bearer ts_xxx</code>、<code>X-API-Key: ts_xxx</code> 或查询参数 <code>api_key</code>。</p>
             <table>
                 <thead><tr><th>参数</th><th>说明</th><th>必填</th></tr></thead>
                 <tbody>

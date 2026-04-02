@@ -114,30 +114,45 @@ def _normalize_task_result(task_row: Dict[str, Any]) -> Dict[str, Any]:
     status = "ready"
     value = None
     elapsed_time = None
+    result_text = "-"
 
     if isinstance(parsed, dict):
         if parsed.get("status") == "CAPTCHA_NOT_READY":
             status = "processing"
+            result_text = "处理中"
         elif parsed.get("value") == "CAPTCHA_FAIL":
             status = "failed"
             value = parsed.get("value")
+            result_text = "求解失败"
         elif parsed.get("value"):
             status = "ready"
             value = parsed.get("value")
+            result_text = str(parsed.get("value"))
         elapsed_time = parsed.get("elapsed_time")
     elif parsed == "CAPTCHA_NOT_READY":
         status = "processing"
+        result_text = "处理中"
     elif parsed == "CAPTCHA_FAIL":
         status = "failed"
         value = parsed
+        result_text = "求解失败"
+    elif parsed is not None:
+        result_text = str(parsed)
+
+    result_json = json.dumps(parsed, ensure_ascii=False, indent=2) if parsed is not None else ""
 
     return {
         "task_id": task_row.get("task_id"),
         "type": task_row.get("type"),
         "status": status,
         "value": value,
+        "result_text": result_text,
+        "result_json": result_json,
         "elapsed_time": elapsed_time,
         "created_at": str(task_row.get("created_at")),
+        "owner_id": task_row.get("owner_id"),
+        "owner_kind": task_row.get("owner_kind"),
+        "api_key_id": task_row.get("api_key_id"),
         "data": parsed,
     }
 
@@ -207,6 +222,9 @@ async def _init_sqlite_schema(db: aiosqlite.Connection) -> None:
             task_id TEXT PRIMARY KEY,
             type TEXT NOT NULL,
             data TEXT NOT NULL,
+            owner_id TEXT,
+            owner_kind TEXT,
+            api_key_id TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
@@ -315,6 +333,9 @@ async def _init_pgsql_schema(conn: asyncpg.Connection) -> None:
             task_id TEXT PRIMARY KEY,
             type TEXT NOT NULL,
             data TEXT NOT NULL,
+            owner_id TEXT,
+            owner_kind TEXT,
+            api_key_id TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
@@ -416,6 +437,16 @@ async def _init_pgsql_schema(conn: asyncpg.Connection) -> None:
 
 
 async def _ensure_sqlite_migrations(db: aiosqlite.Connection) -> None:
+    async with db.execute("PRAGMA table_info(results)") as cursor:
+        rows = await cursor.fetchall()
+        result_columns = {row[1] for row in rows}
+    if "owner_id" not in result_columns:
+        await db.execute("ALTER TABLE results ADD COLUMN owner_id TEXT")
+    if "owner_kind" not in result_columns:
+        await db.execute("ALTER TABLE results ADD COLUMN owner_kind TEXT")
+    if "api_key_id" not in result_columns:
+        await db.execute("ALTER TABLE results ADD COLUMN api_key_id TEXT")
+
     async with db.execute("PRAGMA table_info(portal_users)") as cursor:
         rows = await cursor.fetchall()
         user_columns = {row[1] for row in rows}
@@ -487,6 +518,36 @@ async def _ensure_sqlite_migrations(db: aiosqlite.Connection) -> None:
 
 
 async def _ensure_pgsql_migrations(conn: asyncpg.Connection) -> None:
+    result_owner_exists = await conn.fetchval(
+        """
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name = 'results' AND column_name = 'owner_id'
+        """
+    )
+    if not result_owner_exists:
+        await conn.execute("ALTER TABLE results ADD COLUMN owner_id TEXT")
+
+    result_owner_kind_exists = await conn.fetchval(
+        """
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name = 'results' AND column_name = 'owner_kind'
+        """
+    )
+    if not result_owner_kind_exists:
+        await conn.execute("ALTER TABLE results ADD COLUMN owner_kind TEXT")
+
+    result_api_key_exists = await conn.fetchval(
+        """
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name = 'results' AND column_name = 'api_key_id'
+        """
+    )
+    if not result_api_key_exists:
+        await conn.execute("ALTER TABLE results ADD COLUMN api_key_id TEXT")
+
     user_exists = await conn.fetchval(
         """
         SELECT 1
@@ -723,15 +784,31 @@ async def init_db() -> None:
         raise
 
 
-async def save_result(task_id: str, task_type: str, data: Union[Dict[str, Any], str]) -> None:
+async def save_result(
+    task_id: str,
+    task_type: str,
+    data: Union[Dict[str, Any], str],
+    owner_id: Optional[str] = None,
+    owner_kind: Optional[str] = None,
+    api_key_id: Optional[str] = None,
+) -> None:
     db_type = _get_db_type()
     data_json = _serialize_data(data)
     try:
         if db_type == "sqlite":
             async with await _sqlite_connect() as db:
                 await db.execute(
-                    "REPLACE INTO results (task_id, type, data) VALUES (?, ?, ?)",
-                    (task_id, task_type, data_json),
+                    """
+                    INSERT INTO results (task_id, type, data, owner_id, owner_kind, api_key_id)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(task_id) DO UPDATE SET
+                        type = excluded.type,
+                        data = excluded.data,
+                        owner_id = COALESCE(results.owner_id, excluded.owner_id),
+                        owner_kind = COALESCE(results.owner_kind, excluded.owner_kind),
+                        api_key_id = COALESCE(results.api_key_id, excluded.api_key_id)
+                    """,
+                    (task_id, task_type, data_json, owner_id, owner_kind, api_key_id),
                 )
                 await db.commit()
                 return
@@ -740,14 +817,22 @@ async def save_result(task_id: str, task_type: str, data: Union[Dict[str, Any], 
         try:
             await conn.execute(
                 """
-                INSERT INTO results (task_id, type, data)
-                VALUES ($1, $2, $3)
+                INSERT INTO results (task_id, type, data, owner_id, owner_kind, api_key_id)
+                VALUES ($1, $2, $3, $4, $5, $6)
                 ON CONFLICT (task_id)
-                DO UPDATE SET type = EXCLUDED.type, data = EXCLUDED.data
+                DO UPDATE SET
+                    type = EXCLUDED.type,
+                    data = EXCLUDED.data,
+                    owner_id = COALESCE(results.owner_id, EXCLUDED.owner_id),
+                    owner_kind = COALESCE(results.owner_kind, EXCLUDED.owner_kind),
+                    api_key_id = COALESCE(results.api_key_id, EXCLUDED.api_key_id)
                 """,
                 task_id,
                 task_type,
                 data_json,
+                owner_id,
+                owner_kind,
+                api_key_id,
             )
         finally:
             await conn.close()
@@ -773,6 +858,32 @@ async def load_result(task_id: str) -> Optional[Union[Dict[str, Any], str]]:
             await conn.close()
     except Exception as e:
         _logger().error(f"Error loading result {task_id}: {e}")
+        return None
+
+
+async def get_result_record(task_id: str) -> Optional[Dict[str, Any]]:
+    db_type = _get_db_type()
+    try:
+        if db_type == "sqlite":
+            async with await _sqlite_connect() as db:
+                async with db.execute(
+                    "SELECT task_id, type, data, owner_id, owner_kind, api_key_id, created_at FROM results WHERE task_id = ?",
+                    (task_id,),
+                ) as cursor:
+                    row = await cursor.fetchone()
+                    return _normalize_task_result(_dict_from_sqlite_row(row)) if row else None
+
+        conn = await _pgsql_connect()
+        try:
+            row = await conn.fetchrow(
+                "SELECT task_id, type, data, owner_id, owner_kind, api_key_id, created_at FROM results WHERE task_id = $1",
+                task_id,
+            )
+            return _normalize_task_result(dict(row)) if row else None
+        finally:
+            await conn.close()
+    except Exception as e:
+        _logger().error(f"Error loading result record {task_id}: {e}")
         return None
 
 
@@ -1269,6 +1380,64 @@ async def list_recent_results(limit: int = 20) -> List[Dict[str, Any]]:
             limit,
         )
         return [_normalize_task_result(dict(row)) for row in rows]
+    finally:
+        await conn.close()
+
+
+async def list_recent_results_for_owner(owner_id: str, owner_kind: str, limit: int = 20) -> List[Dict[str, Any]]:
+    db_type = _get_db_type()
+    if db_type == "sqlite":
+        async with await _sqlite_connect() as db:
+            async with db.execute(
+                "SELECT task_id, type, data, owner_id, owner_kind, api_key_id, created_at FROM results WHERE owner_id = ? AND owner_kind = ? ORDER BY created_at DESC LIMIT ?",
+                (owner_id, owner_kind, limit),
+            ) as cursor:
+                rows = await cursor.fetchall()
+                return [_normalize_task_result(_dict_from_sqlite_row(row)) for row in rows]
+
+    conn = await _pgsql_connect()
+    try:
+        rows = await conn.fetch(
+            "SELECT task_id, type, data, owner_id, owner_kind, api_key_id, created_at FROM results WHERE owner_id = $1 AND owner_kind = $2 ORDER BY created_at DESC LIMIT $3",
+            owner_id,
+            owner_kind,
+            limit,
+        )
+        return [_normalize_task_result(dict(row)) for row in rows]
+    finally:
+        await conn.close()
+
+
+async def get_service_api_key_by_token(token: str) -> Optional[Dict[str, Any]]:
+    db_type = _get_db_type()
+    if db_type == "sqlite":
+        async with await _sqlite_connect() as db:
+            async with db.execute(
+                "SELECT * FROM service_api_keys WHERE token = ? LIMIT 1",
+                (token,),
+            ) as cursor:
+                row = await cursor.fetchone()
+                return _dict_from_sqlite_row(row) if row else None
+
+    conn = await _pgsql_connect()
+    try:
+        row = await conn.fetchrow("SELECT * FROM service_api_keys WHERE token = $1 LIMIT 1", token)
+        return dict(row) if row else None
+    finally:
+        await conn.close()
+
+
+async def touch_service_api_key_usage(key_id: str) -> None:
+    db_type = _get_db_type()
+    if db_type == "sqlite":
+        async with await _sqlite_connect() as db:
+            await db.execute("UPDATE service_api_keys SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?", (key_id,))
+            await db.commit()
+            return
+
+    conn = await _pgsql_connect()
+    try:
+        await conn.execute("UPDATE service_api_keys SET last_used_at = CURRENT_TIMESTAMP WHERE id = $1", key_id)
     finally:
         await conn.close()
 

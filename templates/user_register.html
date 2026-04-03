@@ -8,8 +8,8 @@
         :root { --bg:#070b14; --card:rgba(12,18,31,.92); --text:#f4f7ff; --muted:#9ba7c2; --border:rgba(255,255,255,.08); --secondary:#6be5ea; --success:#67c23a; --danger:#f56c6c; }
         html[data-theme='light'] { --bg:#f5f7fb; --card:#fff; --text:#1f2d3d; --muted:#6b7280; --border:#e5eaf3; --secondary:#27c6d9; }
         * { box-sizing:border-box; }
-        body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:var(--text); background:radial-gradient(circle at top left, rgba(107,229,234,.18), transparent 26%), radial-gradient(circle at top right, rgba(124,92,255,.14), transparent 26%), var(--bg); }
-        .page-tools { position:fixed; top:20px; right:20px; z-index:20; }
+        body { margin:0; min-height:100vh; display:grid; place-items:center; padding:124px 24px 24px; font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:var(--text); background:radial-gradient(circle at top left, rgba(107,229,234,.18), transparent 26%), radial-gradient(circle at top right, rgba(124,92,255,.14), transparent 26%), var(--bg); }
+        {% include '_site_header_styles.html' %}
         .card { width:min(560px, 100%); padding:38px; border-radius:28px; border:1px solid var(--border); background:color-mix(in srgb, var(--card) 94%, transparent); box-shadow:0 26px 80px rgba(0,0,0,.28); backdrop-filter:blur(18px); }
         h1 { margin:0 0 8px; }
         p { color:var(--muted); line-height:1.8; }
@@ -32,12 +32,13 @@
 </head>
 <body>
     <div class="toast-stack" id="toastStack"></div>
-    <div class="page-tools"><button type="button" id="themeToggle" class="theme-toggle" title="切换主题" aria-label="切换主题">◐</button></div>
+    {% set header_page = 'register' %}
+    {% include '_site_header.html' %}
     <div class="card">
         <div class="toolbar">
             <div>
                 <h1>创建账户</h1>
-                <p>注册后即可从统一登录页进入账户中心，使用常用服务模块。</p>
+                <p>注册后即可从统一登录页进入控制台，使用常用服务模块。</p>
             </div>
         </div>
         <form method="post">
@@ -55,12 +56,12 @@
         (function () {
             const root = document.documentElement;
             const toggle = document.getElementById('themeToggle');
-            const savedTheme = localStorage.getItem('portal-auth-theme') || 'newapi';
+            const savedTheme = localStorage.getItem('portal-theme') || 'newapi';
             root.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'newapi');
             toggle?.addEventListener('click', () => {
                 const next = root.getAttribute('data-theme') === 'light' ? 'newapi' : 'light';
                 root.setAttribute('data-theme', next);
-                localStorage.setItem('portal-auth-theme', next);
+                localStorage.setItem('portal-theme', next);
             });
             const message = {{ (message or '')|tojson }};
             if (!message) return;

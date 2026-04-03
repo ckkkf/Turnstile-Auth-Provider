@@ -1,0 +1,59 @@
+{% set current_page = header_page if header_page is defined else (active_nav if active_nav is defined else 'home') %}
+<header class="site-header">
+    <div class="site-header-shell">
+        <div class="site-header-inner">
+            <div class="site-header-main">
+                <a class="site-brand" href="/">flexapi-captcha</a>
+                <nav class="site-nav" aria-label="主导航">
+                    <a href="/" class="{% if current_page == 'home' %}active{% endif %}">首页</a>
+                    <a href="/#features">能力</a>
+                    <a href="/#services">服务</a>
+                    <a href="/#guide">接入</a>
+                    <a href="/docs" class="{% if current_page == 'docs' %}active{% endif %}">文档</a>
+                    <a href="{% if admin_session.logged_in %}/admin{% elif user_session.logged_in %}/user/center{% else %}/login{% endif %}" class="{% if current_page in ['dashboard', 'accounts', 'proxies', 'user_overview', 'user_keys', 'user_security', 'user_logs', 'user_billing'] %}active{% endif %}">控制台 <span class="site-nav-jump" aria-hidden="true">↗</span></a>
+                </nav>
+            </div>
+            <div class="site-header-actions">
+                <button type="button" class="theme-toggle site-theme-toggle" id="themeToggle" title="切换主题" aria-label="切换主题">◐</button>
+                {% if user_session.logged_in or admin_session.logged_in %}
+                    {% include '_user_menu.html' %}
+                {% else %}
+                    <a class="site-btn site-btn-ghost" href="/docs">文档</a>
+                    <a class="site-btn site-btn-primary" href="/user/center">控制台</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</header>
+<script>
+    (function () {
+        const userMenus = document.querySelectorAll('.user-menu');
+        if (!userMenus.length) return;
+
+        userMenus.forEach((menu) => {
+            const trigger = menu.querySelector('.user-menu-trigger');
+            trigger?.addEventListener('click', () => {
+                userMenus.forEach((otherMenu) => {
+                    if (otherMenu !== menu) {
+                        otherMenu.open = false;
+                    }
+                });
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            userMenus.forEach((menu) => {
+                if (menu.open && !menu.contains(event.target)) {
+                    menu.open = false;
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            userMenus.forEach((menu) => {
+                menu.open = false;
+            });
+        });
+    })();
+</script>

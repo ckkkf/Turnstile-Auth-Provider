@@ -1,0 +1,23 @@
+{% set menu_name = user_session.username or admin_session.username %}
+{% set menu_initial = (menu_name[:1] if menu_name else 'U')|upper %}
+<details class="user-menu">
+    <summary class="user-menu-trigger" aria-label="账户菜单">
+        <span class="user-avatar">{{ menu_initial }}</span>
+    </summary>
+    <div class="user-menu-panel">
+        <div class="user-menu-meta">
+            <strong>{{ menu_name }}</strong>
+            <span>{% if user_session.kind == 'admin' or admin_session.logged_in %}管理员{% else %}用户{% endif %}</span>
+        </div>
+        <a class="user-menu-link" href="/user/center?section=security">控制台</a>
+        {% if admin_session.logged_in %}
+        <form method="post" action="/admin/logout">
+            <button type="submit" class="user-menu-link user-menu-button">退出登录</button>
+        </form>
+        {% else %}
+        <form method="post" action="/user/logout">
+            <button type="submit" class="user-menu-link user-menu-button">退出登录</button>
+        </form>
+        {% endif %}
+    </div>
+</details>

@@ -1,125 +1,57 @@
 ﻿<!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN" data-theme="newapi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }} - flexapi-captcha</title>
     <style>
         :root {
-            --bg: #f4f7fb;
-            --bg-soft: #eef4ff;
-            --sidebar: #ffffff;
-            --sidebar-text: #4b5563;
-            --sidebar-active: #409eff;
-            --card: rgba(255, 255, 255, 0.96);
-            --card-strong: #ffffff;
-            --text: #303133;
-            --muted: #606266;
-            --border: #e4e7ed;
-            --primary: #409eff;
-            --primary-soft: rgba(64, 158, 255, 0.12);
+            --bg: #070b14;
+            --bg-soft: #0b1020;
+            --sidebar: rgba(12,18,31,.82);
+            --sidebar-text: #a2acc6;
+            --sidebar-active: #4f7cff;
+            --card: rgba(12,18,31,.72);
+            --card-strong: rgba(12,18,31,.92);
+            --text: #f5f7ff;
+            --muted: #a2acc6;
+            --border: rgba(255,255,255,.08);
+            --primary: #4f7cff;
+            --primary-soft: rgba(79,124,255,.14);
             --success: #67c23a;
             --warning: #e6a23c;
             --danger: #f56c6c;
-            --shadow: 0 8px 24px rgba(31, 45, 61, 0.06);
+            --shadow: 0 18px 48px rgba(0,0,0,.28);
         }
-        html[data-theme='dark'] {
-            --bg: #14181f;
-            --bg-soft: #11161d;
-            --sidebar: #161b22;
-            --sidebar-text: #c0c4cc;
-            --sidebar-active: #5aa8ff;
-            --card: rgba(31, 35, 41, 0.95);
-            --card-strong: #1f2329;
-            --text: #e5eaf3;
-            --muted: #a3abb8;
-            --border: #3a3f45;
-            --primary: #5aa8ff;
-            --primary-soft: rgba(90, 168, 255, 0.16);
-            --success: #7ad84d;
-            --warning: #ffba53;
-            --danger: #ff7b7b;
-            --shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
-        }
-        html[data-theme='violet'] {
-            --bg: #f7f3ff;
-            --bg-soft: #f1eaff;
-            --sidebar: #ffffff;
-            --sidebar-text: #5b5f72;
-            --sidebar-active: #9b7bff;
-            --card: rgba(255, 255, 255, 0.94);
+        html[data-theme='light'] {
+            --bg: #f5f7fb;
+            --bg-soft: #eef3fb;
+            --sidebar: rgba(255,255,255,.88);
+            --sidebar-text: #6b7280;
+            --sidebar-active: #3867f4;
+            --card: rgba(255,255,255,.9);
             --card-strong: #ffffff;
-            --text: #332f4a;
-            --muted: #726c91;
-            --border: #e7defa;
-            --primary: #7c5cff;
-            --primary-soft: rgba(124, 92, 255, 0.12);
-            --success: #39b980;
-            --warning: #f1a73d;
-            --danger: #ef5b7d;
-            --shadow: 0 12px 30px rgba(89, 75, 183, 0.12);
-        }
-        html[data-theme='emerald'] {
-            --bg: #f2fbf7;
-            --bg-soft: #eaf8f1;
-            --sidebar: #ffffff;
-            --sidebar-text: #4f6b64;
-            --sidebar-active: #3ed6b5;
-            --card: rgba(255, 255, 255, 0.94);
-            --card-strong: #ffffff;
-            --text: #25413b;
-            --muted: #5e7d76;
-            --border: #d8eee7;
-            --primary: #19b78b;
-            --primary-soft: rgba(25, 183, 139, 0.12);
-            --success: #27c06d;
-            --warning: #f0a53a;
-            --danger: #eb5e6b;
-            --shadow: 0 12px 30px rgba(23, 76, 69, 0.12);
-        }
-        html[data-theme='sunset'] {
-            --bg: #fff7f2;
-            --bg-soft: #fff1e8;
-            --sidebar: #ffffff;
-            --sidebar-text: #7b655f;
-            --sidebar-active: #ff9b6a;
-            --card: rgba(255, 255, 255, 0.94);
-            --card-strong: #ffffff;
-            --text: #4f3834;
-            --muted: #8a6660;
-            --border: #f5ddd4;
-            --primary: #f47b4f;
-            --primary-soft: rgba(244, 123, 79, 0.12);
-            --success: #57b96b;
-            --warning: #eea53b;
-            --danger: #e05555;
-            --shadow: 0 12px 30px rgba(177, 77, 77, 0.12);
-        }
-        html[data-theme='ocean'] {
-            --bg: #f0f9ff;
-            --bg-soft: #e8f5ff;
-            --sidebar: #ffffff;
-            --sidebar-text: #5c7280;
-            --sidebar-active: #47c0ff;
-            --card: rgba(255, 255, 255, 0.94);
-            --card-strong: #ffffff;
-            --text: #254253;
-            --muted: #5b7889;
-            --border: #d8ebf7;
-            --primary: #2898d8;
-            --primary-soft: rgba(40, 152, 216, 0.12);
-            --success: #35bf7b;
-            --warning: #efad3f;
-            --danger: #eb6464;
-            --shadow: 0 12px 30px rgba(20, 63, 92, 0.12);
+            --text: #1f2d3d;
+            --muted: #6b7280;
+            --border: #e5eaf3;
+            --primary: #3867f4;
+            --primary-soft: rgba(56,103,244,.08);
+            --success: #67c23a;
+            --warning: #e6a23c;
+            --danger: #f56c6c;
+            --shadow: 0 18px 48px rgba(15,23,42,.10);
         }
         * { box-sizing: border-box; }
+        {% include '_site_header_styles.html' %}
         body {
             margin: 0;
             font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
             background:
                 radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--primary) 10%, transparent) 0, transparent 30%),
                 radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--success) 8%, transparent) 0, transparent 24%),
+                radial-gradient(circle at 20% 20%, rgba(107,229,234,.14), transparent 24%),
+                radial-gradient(circle at 80% 12%, rgba(239,105,199,.14), transparent 28%),
+                radial-gradient(circle at 50% 100%, rgba(124,92,255,.12), transparent 30%),
                 linear-gradient(180deg, color-mix(in srgb, var(--bg-soft) 78%, #fff 22%) 0%, var(--bg) 100%);
             color: var(--text);
         }
@@ -128,7 +60,7 @@
         .sidebar {
             position: fixed;
             left: 0;
-            top: 16px;
+            top: 92px;
             bottom: 16px;
             width: 248px;
             overflow-y: auto;
@@ -166,7 +98,8 @@
             transform: translateX(2px);
             box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 18%, transparent);
         }
-        .content { margin-left: 280px; padding: 24px; min-height: 100vh; }
+        .content { margin-left: 280px; padding: 102px 24px 24px; min-height: 100vh; }
+        .content.public-content { margin-left: 0; }
         .content-inner { width: min(1480px, 100%); margin: 0 auto; }
         .topbar {
             display: flex;
@@ -226,7 +159,7 @@
             background: color-mix(in srgb, var(--primary-soft) 35%, transparent);
             white-space: nowrap;
         }
-        html[data-theme='dark'] th { background: rgba(255,255,255,.03); }
+        html:not([data-theme='light']) th { background: rgba(255,255,255,.03); }
         tbody tr { transition: background-color .2s ease; }
         tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 24%, transparent); }
         .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; font-size: 12px; border: 1px solid var(--border); border-radius: 6px; }
@@ -355,7 +288,7 @@
         @keyframes toastOut { from { transform: translate3d(0,0,0) scale(1); opacity: 1; } to { transform: translate3d(0,-10px,0) scale(.96); opacity: 0; } }
         @media (max-width: 1280px) { .metric { grid-column: span 3; } }
         @media (max-width: 1100px) { .metric { grid-column: span 4; } .split, .modal-form { grid-template-columns: 1fr; } }
-        @media (max-width: 900px) { .sidebar { position: static; width: auto; margin: 16px; } .content { margin-left: 0; padding-top: 0; } .content-inner { width: 100%; } }
+        @media (max-width: 900px) { .sidebar { position: static; width: auto; margin: 16px; } .content { margin-left: 0; padding-top: 108px; } .content-inner { width: 100%; } }
         @media (max-width: 680px) { .metric { grid-column: span 12; } .toolbar, .topbar { flex-direction: column; align-items: flex-start; } .content { padding: 14px; } .card, .panel, .topbar { padding: 18px; border-radius: 18px; } .toast-stack { left: 12px; right: 12px; top: 12px; } .toast { min-width: 0; max-width: none; width: 100%; } .modal-mask { padding: 12px; } }
     </style>
 </head>
@@ -380,12 +313,13 @@
             </nav>
         </aside>
         {% endif %}
-        <main class="content" {% if not admin_session.logged_in and not user_session.logged_in %}style="margin-left:0;"{% endif %}>
+        {% include '_site_header.html' %}
+        <main class="content {% if not admin_session.logged_in and not user_session.logged_in %}public-content{% endif %}">
             <div class="content-inner">
             <div class="topbar">
                 <div>
                     <h1 class="title">{{ title }}</h1>
-                    <div class="subtitle">{% if active_nav in ['user_overview', 'user_keys', 'user_security', 'user_logs', 'user_billing'] %}统一账户中心{% elif admin_session.logged_in %}后台控制台{% elif user_session.logged_in %}统一账户中心{% else %}服务门户{% endif %}</div>
+                    <div class="subtitle">{% if active_nav in ['user_overview', 'user_keys', 'user_security', 'user_logs', 'user_billing'] %}控制台{% elif admin_session.logged_in %}后台控制台{% elif user_session.logged_in %}控制台{% else %}服务门户{% endif %}</div>
                 </div>
                 {% if admin_session.logged_in %}
                 <div class="status-badge">
@@ -395,7 +329,7 @@
                 {% else %}
                 <div class="status-badge">
                     <span class="status-dot"></span>
-                    <span>开放访问 · 公共文档与账户中心</span>
+                    <span>开放访问 · 公共文档与控制台</span>
                 </div>
                 {% endif %}
             </div>
@@ -407,11 +341,7 @@
                         当前账号：{{ user_session.username }}{% if user_session.kind == 'admin' %} / 管理员{% else %} / 用户{% endif %}
                     {% endif %}
                 </div>
-                <div class="toolbar-right">
-                    <button type="button" id="themeToggle" class="icon-btn" title="切换主题" aria-label="切换主题">◐</button>
-                    {% if admin_session.logged_in %}<form method="post" action="/admin/logout"><button type="submit" class="btn">退出登录</button></form>{% endif %}
-                    {% if user_session.logged_in and not admin_session.logged_in %}<form method="post" action="/user/logout"><button type="submit" class="btn">退出登录</button></form>{% endif %}
-                </div>
+                <div class="toolbar-right"></div>
             </div>
             {% block content %}{% endblock %}
             </div>
@@ -421,13 +351,13 @@
         (function(){
             const root = document.documentElement;
             const themeToggle = document.getElementById('themeToggle');
-            const savedTheme = localStorage.getItem('portal-theme') || 'light';
+            const savedTheme = localStorage.getItem('portal-theme') || 'newapi';
             const toastStack = document.getElementById('toastStack');
-            const themes = ['light', 'dark', 'violet', 'emerald', 'sunset', 'ocean'];
 
             function setTheme(theme) {
-                root.setAttribute('data-theme', theme);
-                localStorage.setItem('portal-theme', theme);
+                const nextTheme = theme === 'light' ? 'light' : 'newapi';
+                root.setAttribute('data-theme', nextTheme);
+                localStorage.setItem('portal-theme', nextTheme);
             }
 
             function showToast(message, type = 'info', title = '提示') {
@@ -464,9 +394,8 @@
 
             setTheme(savedTheme);
             themeToggle?.addEventListener('click', () => {
-                const current = root.getAttribute('data-theme') || 'light';
-                const index = themes.indexOf(current);
-                setTheme(themes[(index + 1) % themes.length]);
+                const current = root.getAttribute('data-theme') || 'newapi';
+                setTheme(current === 'light' ? 'newapi' : 'light');
             });
 
             const uptime = document.getElementById('uptime');

@@ -8,8 +8,8 @@
         :root { --bg:#070b14; --card:rgba(10,14,24,.74); --card-strong:rgba(12,18,31,.94); --text:#f4f7ff; --muted:#9ba7c2; --border:rgba(255,255,255,.08); --primary:#4f7cff; --primary-hover:#3d68e6; --secondary:#6be5ea; --success:#67c23a; --danger:#f56c6c; --shadow:0 24px 80px rgba(0,0,0,.45); }
         html[data-theme='light'] { --bg:#f5f7fb; --card:rgba(255,255,255,.88); --card-strong:#fff; --text:#1f2d3d; --muted:#6b7280; --border:#e5eaf3; --primary:#3867f4; --primary-hover:#2e57d2; --secondary:#27c6d9; --shadow:0 22px 60px rgba(15,23,42,.12); }
         * { box-sizing: border-box; }
-        body { margin:0; min-height:100vh; font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:var(--text); background: radial-gradient(circle at 20% 20%, rgba(107,229,234,.18), transparent 24%), radial-gradient(circle at 80% 18%, rgba(124,92,255,.16), transparent 28%), var(--bg); display:grid; place-items:center; padding:24px; }
-        .page-tools { position:fixed; top:20px; right:20px; z-index:20; }
+        body { margin:0; min-height:100vh; font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:var(--text); background: radial-gradient(circle at 20% 20%, rgba(107,229,234,.18), transparent 24%), radial-gradient(circle at 80% 18%, rgba(124,92,255,.16), transparent 28%), var(--bg); display:grid; place-items:center; padding:124px 24px 24px; }
+        {% include '_site_header_styles.html' %}
     .page { width:min(1180px, 100%); display:grid; grid-template-columns: 1.12fr .88fr; gap:24px; align-items:stretch; }
     .hero, .card { border:1px solid var(--border); background:var(--card); backdrop-filter:blur(20px); border-radius:28px; box-shadow:0 26px 80px rgba(0,0,0,.26); }
     .hero { padding:40px; position:relative; overflow:hidden; }
@@ -41,22 +41,23 @@
 </head>
 <body>
     <div class="toast-stack" id="toastStack"></div>
-    <div class="page-tools"><button type="button" id="themeToggle" class="theme-toggle" title="切换主题" aria-label="切换主题">◐</button></div>
+    {% set header_page = 'login' %}
+    {% include '_site_header.html' %}
     <div class="page">
         <section class="hero">
             <span class="badge">统一账户入口</span>
             <h1>承载 AI 应用，管理数字资产，连接未来。</h1>
-            <p>普通用户和管理员都从这里登录，系统自动识别身份。管理员进入账户中心后，也保留用户侧常用服务视图。</p>
+            <p>普通用户和管理员都从这里登录，系统自动识别身份。管理员进入控制台后，也保留用户侧常用服务视图。</p>
             <div class="hero-list">
                 <div class="hero-item">一个登录页识别用户 / 管理员身份。</div>
-                <div class="hero-item">账户中心与后台共享同一套左侧栏模板。</div>
+                <div class="hero-item">控制台与后台共享同一套左侧栏模板。</div>
                 <div class="hero-item">API Key、Webhook、白名单、账单和调用日志均可直接操作。</div>
             </div>
         </section>
         <section class="card">
             <div>
                 <h2 style="margin:0;">{{ '管理员登录' if auth_mode == 'admin' else '统一账户登录' }}</h2>
-                <p>{{ '管理员可从此处进入后台或账户中心。' if auth_mode == 'admin' else '用户和管理员共用同一个登录页。' }}</p>
+                <p>{{ '管理员可从此处进入后台或控制台。' if auth_mode == 'admin' else '用户和管理员共用同一个登录页。' }}</p>
             </div>
             <form method="post">
                 <input name="username" placeholder="用户名" required>
@@ -73,13 +74,13 @@
         (function () {
             const root = document.documentElement;
             const toggle = document.getElementById('themeToggle');
-            const savedTheme = localStorage.getItem('portal-auth-theme') || 'newapi';
+            const savedTheme = localStorage.getItem('portal-theme') || 'newapi';
             const toastStack = document.getElementById('toastStack');
             root.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'newapi');
             toggle?.addEventListener('click', () => {
                 const next = root.getAttribute('data-theme') === 'light' ? 'newapi' : 'light';
                 root.setAttribute('data-theme', next);
-                localStorage.setItem('portal-auth-theme', next);
+                localStorage.setItem('portal-theme', next);
             });
             const message = {{ (message or '')|tojson }};
             if (!message || !toastStack) return;

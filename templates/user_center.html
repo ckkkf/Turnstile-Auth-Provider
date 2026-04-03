@@ -50,22 +50,11 @@
     {% endif %}
 
     {% if user_section == 'keys' %}
-    <div class="card" style="grid-column: span 12;">
-        <h3 class="panel-title">创建 API Key</h3>
-        <form method="post" class="modal-form">
-            <input type="hidden" name="action" value="create_api_key">
-            <input type="hidden" name="section" value="keys">
-            <input name="name" placeholder="密钥名称" required>
-            <input name="scopes" placeholder="权限范围，如 solve,docs" value="solve,docs" required>
-            <input class="full" name="expires_at" placeholder="过期时间，如 2026-12-31">
-            <div class="full action-bar" style="justify-content:flex-end; margin-top:4px;">
-                <button type="submit" class="btn btn-primary">创建</button>
-            </div>
-        </form>
-    </div>
-
     <div class="card table-card">
-        <h3 class="panel-title">API Key 列表</h3>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
+            <h3 class="panel-title" style="margin:0;">API Key 列表</h3>
+            <button type="button" class="btn btn-primary" onclick="openApiKeyCreate()">新增 API Key</button>
+        </div>
         <table>
             <thead><tr><th>名称</th><th>Token</th><th>权限</th><th>状态</th><th>过期时间</th><th>操作</th></tr></thead>
             <tbody>
@@ -344,7 +333,11 @@ async function copyApiKeyToken(keyId) {
             <input type="hidden" name="section" value="keys">
             <input type="hidden" name="key_id" id="apiKeyEditId">
             <input name="name" id="apiKeyEditName" placeholder="密钥名称" required>
-            <input name="scopes" id="apiKeyEditScopes" placeholder="权限范围，如 solve,docs" required>
+            <select name="scopes" id="apiKeyEditScopes" required>
+                {% for option in api_key_scope_options %}
+                <option value="{{ option.value }}">{{ option.label }}</option>
+                {% endfor %}
+            </select>
             <input class="full" name="expires_at" id="apiKeyEditExpiresAt" placeholder="过期时间，如 2026-12-31">
             <div class="full action-bar" style="justify-content:flex-end; margin-top:4px;">
                 <button type="submit" class="btn btn-primary">保存修改</button>
@@ -354,11 +347,51 @@ async function copyApiKeyToken(keyId) {
     </div>
 </div>
 
+<div class="modal-mask" id="apiKeyCreateMask">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="panel-title" style="margin:0;">新增 API Key</h3>
+            <button type="button" class="modal-close" onclick="closeModal('apiKeyCreateMask')">×</button>
+        </div>
+        <form method="post" class="modal-form" id="apiKeyCreateForm">
+            <input type="hidden" name="action" value="create_api_key">
+            <input type="hidden" name="section" value="keys">
+            <input name="name" id="apiKeyCreateName" placeholder="密钥名称" required>
+            <select name="scopes" id="apiKeyCreateScopes" required>
+                {% for option in api_key_scope_options %}
+                <option value="{{ option.value }}" {% if option.value == 'solve' %}selected{% endif %}>{{ option.label }}</option>
+                {% endfor %}
+            </select>
+            <input class="full" name="expires_at" id="apiKeyCreateExpiresAt" placeholder="过期时间，如 2026-12-31">
+            <div class="full action-bar" style="justify-content:flex-end; margin-top:4px;">
+                <button type="submit" class="btn btn-primary">创建</button>
+                <button type="button" class="btn" onclick="closeModal('apiKeyCreateMask')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+function setApiKeyScopeSelect(selectId, scopes) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const value = scopes || 'solve';
+    const options = Array.from(select.options || []);
+    const matched = options.some((option) => option.value === value);
+    select.value = matched ? value : 'solve';
+}
+
+function openApiKeyCreate() {
+    const form = document.getElementById('apiKeyCreateForm');
+    if (form) form.reset();
+    setApiKeyScopeSelect('apiKeyCreateScopes', 'solve');
+    openMask('apiKeyCreateMask');
+}
+
 function openApiKeyEdit(item) {
     document.getElementById('apiKeyEditId').value = item.id || '';
     document.getElementById('apiKeyEditName').value = item.name || '';
-    document.getElementById('apiKeyEditScopes').value = item.scopes || '';
+    setApiKeyScopeSelect('apiKeyEditScopes', item.scopes || 'solve');
     document.getElementById('apiKeyEditExpiresAt').value = item.expires_at || '';
     openMask('apiKeyEditMask');
 }

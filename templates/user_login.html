@@ -10,15 +10,15 @@
         * { box-sizing: border-box; }
         body { margin:0; min-height:100vh; font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:var(--text); background: radial-gradient(circle at 20% 20%, rgba(107,229,234,.18), transparent 24%), radial-gradient(circle at 80% 18%, rgba(124,92,255,.16), transparent 28%), var(--bg); display:grid; place-items:center; padding:24px; }
         .page-tools { position:fixed; top:20px; right:20px; z-index:20; }
-        .page { width:min(1120px, 100%); display:grid; grid-template-columns: 1.1fr .9fr; gap:22px; align-items:stretch; }
-        .hero, .card { border:1px solid var(--border); background:var(--card); backdrop-filter:blur(18px); border-radius:24px; box-shadow:var(--shadow); }
-        .hero { padding:34px; position:relative; overflow:hidden; }
+    .page { width:min(1180px, 100%); display:grid; grid-template-columns: 1.12fr .88fr; gap:24px; align-items:stretch; }
+    .hero, .card { border:1px solid var(--border); background:var(--card); backdrop-filter:blur(20px); border-radius:28px; box-shadow:0 26px 80px rgba(0,0,0,.26); }
+    .hero { padding:40px; position:relative; overflow:hidden; }
         .badge { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid var(--border); color:var(--secondary); }
         h1 { margin:18px 0 10px; font-size: clamp(28px, 3.8vw, 42px); line-height:1.15; max-width:440px; }
         .hero p { color:var(--muted); line-height:1.85; max-width:520px; font-size:14px; }
         .hero-list { display:grid; gap:12px; margin-top:22px; }
-        .hero-item { padding:14px 16px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid var(--border); }
-        .card { padding:30px; display:flex; flex-direction:column; justify-content:center; }
+    .hero-item { padding:15px 17px; border-radius:16px; background:rgba(255,255,255,.04); border:1px solid var(--border); }
+    .card { padding:34px; display:flex; flex-direction:column; justify-content:center; }
         .theme-toggle { width:36px; height:36px; border:1px solid var(--border); background:rgba(255,255,255,.05); color:var(--text); border-radius:8px; padding:0; cursor:pointer; }
         .card p { color:var(--muted); margin:0 0 18px; }
         input, button { width:100%; padding:14px 16px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--text); font:inherit; margin-top:12px; }

@@ -10,11 +10,11 @@
         * { box-sizing:border-box; }
         body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:var(--text); background:radial-gradient(circle at top left, rgba(107,229,234,.18), transparent 26%), radial-gradient(circle at top right, rgba(124,92,255,.14), transparent 26%), var(--bg); }
         .page-tools { position:fixed; top:20px; right:20px; z-index:20; }
-        .card { width:min(520px, 100%); padding:34px; border-radius:24px; border:1px solid var(--border); background:var(--card); box-shadow:0 24px 80px rgba(0,0,0,.35); }
+        .card { width:min(560px, 100%); padding:38px; border-radius:28px; border:1px solid var(--border); background:color-mix(in srgb, var(--card) 94%, transparent); box-shadow:0 26px 80px rgba(0,0,0,.28); backdrop-filter:blur(18px); }
         h1 { margin:0 0 8px; }
         p { color:var(--muted); line-height:1.8; }
-        input, button { width:100%; padding:14px 16px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--text); font:inherit; margin-top:12px; }
-        button { background:var(--card); font-weight:700; }
+        input, button { width:100%; padding:15px 16px; border-radius:14px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--text); font:inherit; margin-top:12px; }
+        button { background:var(--card); font-weight:700; box-shadow:0 10px 26px rgba(0,0,0,.10); }
         .toolbar { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
         .theme-toggle { width:36px; height:36px; padding:0; border-radius:8px; background:rgba(255,255,255,.05); }
         .links { margin-top:18px; display:flex; justify-content:space-between; gap:12px; }

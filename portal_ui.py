@@ -55,6 +55,25 @@ def _message() -> str:
     return request.args.get("message", "")
 
 
+API_KEY_SCOPE_OPTIONS = [
+    {"value": "solve", "label": "仅验证求解"},
+    {"value": "docs", "label": "仅文档访问"},
+    {"value": "solve,docs", "label": "全部权限"},
+]
+
+
+def _normalize_api_key_scopes(raw_scopes: str) -> str:
+    allowed_scopes = ["solve", "docs"]
+    selected_scopes = []
+    for scope in (raw_scopes or "").split(","):
+        scope_name = scope.strip()
+        if scope_name in allowed_scopes and scope_name not in selected_scopes:
+            selected_scopes.append(scope_name)
+    if not selected_scopes:
+        return "solve"
+    return ",".join(selected_scopes)
+
+
 class ManagementPortal:
     def __init__(self, server: Any):
         self.server = server
@@ -268,7 +287,7 @@ class ManagementPortal:
                 return _redirect_user_center("请输入新的密码")
             if action == "create_api_key":
                 name = (form.get("name") or "默认密钥").strip()
-                scopes = (form.get("scopes") or "solve,docs").strip()
+                scopes = _normalize_api_key_scopes((form.get("scopes") or "solve").strip())
                 expires_at = (form.get("expires_at") or "").strip()
                 await create_service_api_key(owner_id, owner_kind, name, scopes, expires_at)
                 return _redirect_user_center("API Key 已创建")
@@ -280,7 +299,7 @@ class ManagementPortal:
             if action == "update_api_key":
                 key_id = (form.get("key_id") or "").strip()
                 name = (form.get("name") or "默认密钥").strip()
-                scopes = (form.get("scopes") or "solve,docs").strip()
+                scopes = _normalize_api_key_scopes((form.get("scopes") or "solve").strip())
                 expires_at = (form.get("expires_at") or "").strip()
                 await update_service_api_key(key_id, name, scopes, expires_at)
                 return _redirect_user_center("API Key 已更新")
@@ -352,6 +371,7 @@ class ManagementPortal:
         context["service_webhooks"] = await list_service_webhooks(session.get("user_id"), session.get("user_kind", "user"))
         context["service_ip_whitelist"] = await list_service_ip_whitelist(session.get("user_id"), session.get("user_kind", "user"))
         context["billing_orders"] = await list_service_billing_orders(session.get("user_id"), session.get("user_kind", "user"))
+        context["api_key_scope_options"] = API_KEY_SCOPE_OPTIONS
         context["user_section"] = section
         return await render_template("user_center.html", **context)
 

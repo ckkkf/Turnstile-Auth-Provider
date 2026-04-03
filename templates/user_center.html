@@ -4,22 +4,146 @@
     .result-summary { max-width: 280px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
     .api-key-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
     .api-key-value { flex: 1; min-width: 0; font-family: Consolas, monospace; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .overview-main { grid-column: span 7; }
+    .overview-side { grid-column: span 5; }
+    .account-overview {
+        display: grid;
+        gap: 18px;
+    }
+    .account-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 20px;
+        border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+        border-radius: 20px;
+        background:
+            radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 18%, transparent), transparent 34%),
+            color-mix(in srgb, var(--card-strong) 94%, transparent);
+    }
+    .account-identity {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+    .account-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 800;
+        color: #fff;
+        background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 54%, #8fb2ff));
+        box-shadow: 0 18px 36px color-mix(in srgb, var(--primary) 24%, transparent);
+        flex: 0 0 auto;
+    }
+    .account-meta {
+        min-width: 0;
+        display: grid;
+        gap: 6px;
+    }
+    .account-name {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -.02em;
+        word-break: break-word;
+    }
+    .account-subtitle {
+        color: var(--muted);
+        font-size: 13px;
+    }
+    .overview-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .overview-badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+        background: color-mix(in srgb, var(--primary-soft) 62%, var(--card));
+        font-size: 12px;
+        color: var(--text);
+    }
+    .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+    .overview-item {
+        padding: 18px;
+        border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+        border-radius: 18px;
+        background: color-mix(in srgb, var(--card) 84%, transparent);
+    }
+    .overview-item .label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 10px;
+    }
+    .overview-item .value {
+        font-size: 22px;
+        line-height: 1.2;
+        font-weight: 800;
+        letter-spacing: -.02em;
+        word-break: break-word;
+    }
+    .quick-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+    }
+    .quick-actions .btn {
+        min-height: 40px;
+        padding-inline: 16px;
+    }
+    @media (max-width: 1100px) {
+        .overview-main, .overview-side { grid-column: span 12; }
+    }
+    @media (max-width: 720px) {
+        .account-hero { flex-direction: column; align-items: flex-start; }
+        .overview-grid { grid-template-columns: 1fr; }
+    }
 </style>
 <div class="grid">
     {% if user_section == 'overview' %}
-    <div class="card" style="grid-column: span 8;">
+    <div class="card overview-main">
         <h3 class="panel-title">账户总览</h3>
-        <div class="overview-grid">
-            <div class="overview-item"><div class="label">账号名称</div><div class="value" style="font-size:18px;">{{ current_user.username if current_user else user_session.username }}</div></div>
-            <div class="overview-item"><div class="label">账户类型</div><div class="value">{{ '管理员' if user_session.kind == 'admin' else '用户' }}</div></div>
-            <div class="overview-item"><div class="label">套餐</div><div class="value">{{ current_user.plan if current_user and current_user.plan else 'admin' }}</div></div>
-            <div class="overview-item"><div class="label">积分</div><div class="value">{{ current_user.points if current_user and current_user.points is not none else '-' }}</div></div>
+        <div class="account-overview">
+            <div class="account-hero">
+                <div class="account-identity">
+                    <div class="account-avatar">{{ (current_user.username if current_user else user_session.username)[0]|upper }}</div>
+                    <div class="account-meta">
+                        <div class="account-name">{{ current_user.username if current_user else user_session.username }}</div>
+                        <div class="account-subtitle">统一查看账户类型、套餐状态与积分额度。</div>
+                    </div>
+                </div>
+                <div class="overview-badges">
+                    <span class="overview-badge">{{ '管理员账户' if user_session.kind == 'admin' else '普通用户' }}</span>
+                    <span class="overview-badge">套餐 {{ current_user.plan if current_user and current_user.plan else 'admin' }}</span>
+                </div>
+            </div>
+            <div class="overview-grid">
+                <div class="overview-item"><div class="label">账号名称</div><div class="value">{{ current_user.username if current_user else user_session.username }}</div></div>
+                <div class="overview-item"><div class="label">账户类型</div><div class="value">{{ '管理员' if user_session.kind == 'admin' else '用户' }}</div></div>
+                <div class="overview-item"><div class="label">当前套餐</div><div class="value">{{ current_user.plan if current_user and current_user.plan else 'admin' }}</div></div>
+                <div class="overview-item"><div class="label">剩余积分</div><div class="value">{{ current_user.points if current_user and current_user.points is not none else '-' }}</div></div>
+            </div>
         </div>
     </div>
-    <div class="card" style="grid-column: span 4;">
+    <div class="card overview-side">
         <h3 class="panel-title">快捷入口</h3>
         <p class="small">账户能力已经拆分到左侧导航，不再全部堆在一个工作台里。</p>
-        <div class="action-bar" style="margin-top:12px;">
+        <div class="quick-actions">
             <a class="btn btn-primary" href="/user/center?section=keys">管理 API Key</a>
             <a class="btn" href="/user/center?section=security">安全设置</a>
             <a class="btn" href="/user/center?section=logs">调用日志</a>

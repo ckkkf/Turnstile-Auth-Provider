@@ -197,7 +197,11 @@
             border-radius: 12px;
             box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
         }
-        .btn:hover { transform: translateY(-1px); }
+        .btn:hover {
+            border-color: color-mix(in srgb, var(--primary) 26%, var(--border));
+            background: color-mix(in srgb, var(--primary-soft) 72%, var(--card-strong));
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.10);
+        }
         .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
         .btn-success { background: var(--success); border-color: var(--success); color: #fff; }
         .btn-warning { background: var(--warning); border-color: var(--warning); color: #fff; }
@@ -332,16 +336,6 @@
                     <span>开放访问 · 公共文档与控制台</span>
                 </div>
                 {% endif %}
-            </div>
-            <div class="toolbar">
-                <div class="small">
-                    {% if admin_session.logged_in %}
-                        当前管理员：{{ admin_session.username }} / {{ admin_session.role }}
-                    {% elif user_session.logged_in %}
-                        当前账号：{{ user_session.username }}{% if user_session.kind == 'admin' %} / 管理员{% else %} / 用户{% endif %}
-                    {% endif %}
-                </div>
-                <div class="toolbar-right"></div>
             </div>
             {% block content %}{% endblock %}
             </div>

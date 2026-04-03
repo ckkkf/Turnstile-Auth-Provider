@@ -373,6 +373,8 @@ class ManagementPortal:
         context["billing_orders"] = await list_service_billing_orders(session.get("user_id"), session.get("user_kind", "user"))
         context["api_key_scope_options"] = API_KEY_SCOPE_OPTIONS
         context["user_section"] = section
+        context["show_topbar"] = False
+        context["compact_shell"] = True
         return await render_template("user_center.html", **context)
 
     async def docs_page(self):

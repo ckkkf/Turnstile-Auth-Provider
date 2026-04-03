@@ -6,6 +6,7 @@
     <title>{{ title }} - flexapi-captcha</title>
     <style>
         :root {
+            --site-header-height: 76px;
             --bg: #070b14;
             --bg-soft: #0b1020;
             --sidebar: rgba(12,18,31,.82);
@@ -60,29 +61,20 @@
         .sidebar {
             position: fixed;
             left: 0;
-            top: 92px;
+            top: calc(var(--site-header-height) + 12px);
             bottom: 16px;
             width: 248px;
             overflow-y: auto;
             background: color-mix(in srgb, var(--sidebar) 86%, transparent);
             color: var(--sidebar-text);
-            padding: 18px 14px;
+            padding: 14px;
             margin-left: 16px;
             border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
             border-radius: 24px;
             box-shadow: 0 20px 45px rgba(15, 23, 42, 0.10);
             backdrop-filter: blur(18px);
         }
-        .brand {
-            display:block;
-            padding: 4px 10px 18px;
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--text);
-            border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
-            letter-spacing: .01em;
-        }
-        .nav { padding: 14px 0 0; display: grid; gap: 6px; }
+        .nav { display: grid; gap: 6px; }
         .nav a {
             display: flex;
             align-items: center;
@@ -98,7 +90,8 @@
             transform: translateX(2px);
             box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 18%, transparent);
         }
-        .content { margin-left: 280px; padding: 102px 24px 24px; min-height: 100vh; }
+        .content { margin-left: 280px; padding: calc(var(--site-header-height) + 26px) 24px 24px; min-height: 100vh; }
+        .content.content-compact { padding-top: calc(var(--site-header-height) + 16px); }
         .content.public-content { margin-left: 0; }
         .content-inner { width: min(1480px, 100%); margin: 0 auto; }
         .topbar {
@@ -301,7 +294,6 @@
     <div class="layout">
         {% if admin_session.logged_in or user_session.logged_in %}
         <aside class="sidebar">
-            <a class="brand" href="/">flexapi-captcha</a>
             <nav class="nav">
                 {% if user_session.logged_in %}
                 <a href="/user/center?section=overview" class="{% if active_nav == 'user_overview' %}active{% endif %}">概览</a>
@@ -318,8 +310,9 @@
         </aside>
         {% endif %}
         {% include '_site_header.html' %}
-        <main class="content {% if not admin_session.logged_in and not user_session.logged_in %}public-content{% endif %}">
+        <main class="content {% if not admin_session.logged_in and not user_session.logged_in %}public-content{% endif %}{% if compact_shell %} content-compact{% endif %}">
             <div class="content-inner">
+            {% if show_topbar is not defined or show_topbar %}
             <div class="topbar">
                 <div>
                     <h1 class="title">{{ title }}</h1>
@@ -337,6 +330,7 @@
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
             {% block content %}{% endblock %}
             </div>
         </main>

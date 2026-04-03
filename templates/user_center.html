@@ -4,8 +4,13 @@
     .result-summary { max-width: 280px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
     .api-key-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
     .api-key-value { flex: 1; min-width: 0; font-family: Consolas, monospace; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .overview-main { grid-column: span 7; }
-    .overview-side { grid-column: span 5; }
+    .overview-main { grid-column: span 8; }
+    .overview-side {
+        grid-column: span 4;
+        display: grid;
+        gap: 14px;
+        align-self: start;
+    }
     .account-overview {
         display: grid;
         gap: 18px;
@@ -97,14 +102,45 @@
         word-break: break-word;
     }
     .quick-actions {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
         margin-top: 14px;
     }
     .quick-actions .btn {
+        width: 100%;
         min-height: 40px;
         padding-inline: 16px;
+        justify-content: flex-start;
+    }
+    .overview-side-card {
+        display: grid;
+        gap: 14px;
+    }
+    .overview-side-card .panel-title {
+        margin-bottom: 0;
+    }
+    .side-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+    .side-metric {
+        padding: 16px;
+        border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+        border-radius: 18px;
+        background: color-mix(in srgb, var(--card) 84%, transparent);
+    }
+    .side-metric .label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 10px;
+    }
+    .side-metric .value {
+        font-size: 24px;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -.02em;
     }
     @media (max-width: 1100px) {
         .overview-main, .overview-side { grid-column: span 12; }
@@ -112,6 +148,7 @@
     @media (max-width: 720px) {
         .account-hero { flex-direction: column; align-items: flex-start; }
         .overview-grid { grid-template-columns: 1fr; }
+        .quick-actions, .side-metrics { grid-template-columns: 1fr; }
     }
 </style>
 <div class="grid">
@@ -140,14 +177,26 @@
             </div>
         </div>
     </div>
-    <div class="card overview-side">
-        <h3 class="panel-title">快捷入口</h3>
-        <p class="small">账户能力已经拆分到左侧导航，不再全部堆在一个工作台里。</p>
-        <div class="quick-actions">
-            <a class="btn btn-primary" href="/user/center?section=keys">管理 API Key</a>
-            <a class="btn" href="/user/center?section=security">安全设置</a>
-            <a class="btn" href="/user/center?section=logs">调用日志</a>
-            <a class="btn" href="/user/center?section=billing">账单与充值</a>
+    <div class="overview-side">
+        <div class="card overview-side-card">
+            <h3 class="panel-title">快捷入口</h3>
+            <p class="small">常用动作直接进入对应分区，避免在总览页堆满表单和长列表。</p>
+            <div class="quick-actions">
+                <a class="btn btn-primary" href="/user/center?section=keys">管理 API Key</a>
+                <a class="btn" href="/user/center?section=security">安全设置</a>
+                <a class="btn" href="/user/center?section=logs">调用日志</a>
+                <a class="btn" href="/user/center?section=billing">账单与充值</a>
+            </div>
+        </div>
+        <div class="card overview-side-card">
+            <h3 class="panel-title">接入概况</h3>
+            <div class="side-metrics">
+                <div class="side-metric"><div class="label">API Key</div><div class="value">{{ service_api_keys|length }}</div></div>
+                <div class="side-metric"><div class="label">Webhook</div><div class="value">{{ service_webhooks|length }}</div></div>
+                <div class="side-metric"><div class="label">IP 白名单</div><div class="value">{{ service_ip_whitelist|length }}</div></div>
+                <div class="side-metric"><div class="label">最近调用</div><div class="value">{{ recent_tasks|length }}</div></div>
+            </div>
+            <p class="small">最近一条记录：{{ recent_tasks[0].created_at if recent_tasks else '暂无调用记录' }}</p>
         </div>
     </div>
 

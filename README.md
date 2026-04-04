@@ -158,6 +158,26 @@ SQLite：
 python api_solver.py --db-type sqlite --db-path results.db
 ```
 
+## 配置建议
+
+不要把生产数据库配置提交到 GitHub。
+
+- 开发环境：复制 `.env.example` 为本地 `.env.local`，在启动前执行 `set -a; . ./.env.local; set +a`
+- 生产环境：把真实配置写到服务器上的 `/root/turnstile-auth-provider-data/runtime.env`
+- Jenkins / Docker 部署：容器启动时会自动读取 `/data/runtime.env`，这个文件不会进仓库
+
+示例：
+
+```bash
+cat >/root/turnstile-auth-provider-data/runtime.env <<'EOF'
+DB_TYPE=pgsql
+DATABASE_URL=postgresql://user:password@127.0.0.1:5432/turnstile_auth_provider
+SESSION_SECRET=replace_me
+EOF
+```
+
+如果你不传 `--db-type/--db-url/--db-path`，程序会优先使用环境变量；未配置时默认回退到本地 SQLite。
+
 ## 常用参数
 
 | 参数 | 默认值 | 说明 |

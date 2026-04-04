@@ -10,7 +10,7 @@ import asyncpg
 from werkzeug.security import check_password_hash, generate_password_hash
 
 DEFAULT_SQLITE_PATH = "results.db"
-DEFAULT_DB_TYPE = "pgsql"
+DEFAULT_DB_TYPE = "sqlite"
 
 DB_CONFIG = {
     "type": os.getenv("DB_TYPE", DEFAULT_DB_TYPE).lower(),
@@ -19,8 +19,8 @@ DB_CONFIG = {
     "pgsql_host": os.getenv("PGSQL_HOST", "127.0.0.1"),
     "pgsql_port": int(os.getenv("PGSQL_PORT", "5432")),
     "pgsql_user": os.getenv("PGSQL_USER", "postgres"),
-    "pgsql_password": os.getenv("PGSQL_PASSWORD", "123456"),
-    "pgsql_database": os.getenv("PGSQL_DATABASE", "Turnstile-Auth-Provider"),
+    "pgsql_password": os.getenv("PGSQL_PASSWORD", ""),
+    "pgsql_database": os.getenv("PGSQL_DATABASE", "turnstile_auth_provider"),
 }
 
 PRAGMA_SETTINGS = [

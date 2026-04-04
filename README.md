@@ -176,7 +176,7 @@ SESSION_SECRET=replace_me
 EOF
 ```
 
-如果你不传 `--db-type/--db-url/--db-path`，程序会优先使用环境变量；未配置时默认回退到本地 SQLite。
+如果你不传 `--db-type/--db-url/--db-path`，程序会优先使用环境变量；未配置时默认回退到 PostgreSQL。
 
 ## 常用参数
 

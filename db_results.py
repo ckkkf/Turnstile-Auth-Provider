@@ -10,7 +10,7 @@ import asyncpg
 from werkzeug.security import check_password_hash, generate_password_hash
 
 DEFAULT_SQLITE_PATH = "results.db"
-DEFAULT_DB_TYPE = "sqlite"
+DEFAULT_DB_TYPE = "pgsql"
 
 DB_CONFIG = {
     "type": os.getenv("DB_TYPE", DEFAULT_DB_TYPE).lower(),

@@ -982,7 +982,7 @@ def parse_args():
     parser.add_argument('--version', type=str, help='Specify browser version to use (e.g., 139, 141)')
     parser.add_argument('--host', type=str, default='0.0.0.0', help='Specify the IP address where the API solver runs. (Default: 127.0.0.1)')
     parser.add_argument('--port', type=str, default='5072', help='Set the port for the API solver to listen on. (Default: 5072)')
-    parser.add_argument('--db-type', type=str, choices=['pgsql', 'postgres', 'postgresql', 'sqlite'], help='Database backend type. If omitted, environment variables are used; default falls back to sqlite.')
+    parser.add_argument('--db-type', type=str, choices=['pgsql', 'postgres', 'postgresql', 'sqlite'], help='Database backend type. If omitted, environment variables are used; default falls back to pgsql.')
     parser.add_argument('--db-url', type=str, help='PostgreSQL connection URL. Overrides environment variables when provided.')
     parser.add_argument('--db-path', type=str, help='SQLite database file path. Overrides environment variables when provided.')
     return parser.parse_args()

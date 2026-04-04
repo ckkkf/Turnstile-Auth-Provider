@@ -27,6 +27,8 @@ pipeline {
           fi
           cd "$REPO_DIR"
           git fetch origin "$REPO_BRANCH" --prune
+          git reset --hard
+          git clean -fd
           git checkout -B "$REPO_BRANCH" "origin/$REPO_BRANCH"
           git reset --hard "origin/$REPO_BRANCH"
         '''
